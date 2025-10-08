@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}SurveyZim{% endblock %}</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='images/favico.ico') }}">
+    
+    <style>
+        :root {
+            --primary: #4CAF50;
+            --primary-dark: #3d8b40;
+            --primary-light: #6fbf73;
+            --bg: #e0e5ec;
+            --text: #333;
+            --shadow-light: #ffffff;
+            --shadow-dark: #a3b1c6;
+            --card-bg: #e0e5ec;
+            --danger: #f44336;
+            --warning: #ff9800;
+            --info: #2196f3;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Neumorphism base styles */
+        .neu-card {
+            background: var(--card-bg);
+            border-radius: 15px;
+            box-shadow: 8px 8px 16px var(--shadow-dark), 
+                        -8px -8px 16px var(--shadow-light);
+            padding: 20px;
+            transition: all 0.3s ease;
+            margin-bottom: 20px;
+        }
+
+        .neu-card:hover {
+            box-shadow: 4px 4px 8px var(--shadow-dark), 
+                        -4px -4px 8px var(--shadow-light);
+        }
+
+        .neu-input {
+            background: var(--card-bg);
+            border: none;
+            border-radius: 15px;
+            box-shadow: inset 4px 4px 8px var(--shadow-dark), 
+                        inset -4px -4px 8px var(--shadow-light);
+            padding: 12px 20px;
+            font-size: 16px;
+            color: var(--text);
+            transition: all 0.3s ease;
+            outline: none;
+            width: 100%;
+        }
+
+        .neu-input:focus {
+            box-shadow: inset 2px 2px 4px var(--shadow-dark), 
+                        inset -2px -2px 4px var(--shadow-light);
+        }
+
+        .neu-btn {
+            background: var(--card-bg);
+            border: none;
+            border-radius: 15px;
+            box-shadow: 4px 4px 8px var(--shadow-dark), 
+                        -4px -4px 8px var(--shadow-light);
+            padding: 12px 25px;
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            outline: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .neu-btn:hover {
+            box-shadow: 2px 2px 4px var(--shadow-dark), 
+                        -2px -2px 4px var(--shadow-light);
+        }
+
+        .neu-btn:active {
+            box-shadow: inset 4px 4px 8px var(--shadow-dark), 
+                        inset -4px -4px 8px var(--shadow-light);
+        }
+
+        .neu-btn-primary {
+            background: var(--primary);
+            color: white;
+            box-shadow: 4px 4px 8px var(--shadow-dark), 
+                        -4px -4px 8px var(--shadow-light);
+        }
+
+        .neu-btn-primary:hover {
+            background: var(--primary-dark);
+            box-shadow: 2px 2px 4px var(--shadow-dark), 
+                        -2px -2px 4px var(--shadow-light);
+        }
+
+        .neu-btn-danger {
+            background: var(--danger);
+            color: white;
+        }
+
+        /* Header styles */
+        header {
+            background: var(--card-bg);
+            box-shadow: 0 4px 10px var(--shadow-dark), 
+                        0 -4px 10px var(--shadow-light);
+            padding: 15px 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        .header-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        nav {
+            display: flex;
+            gap: 15px;
+        }
+
+        nav a {
+            text-decoration: none;
+            color: var(--text);
+            font-weight: 600;
+            padding: 8px 15px;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        nav a:hover {
+            background: var(--card-bg);
+            box-shadow: inset 2px 2px 4px var(--shadow-dark), 
+                        inset -2px -2px 4px var(--shadow-light);
+        }
+
+        /* Main content */
+        main {
+            flex: 1;
+            padding: 30px 20px;
+        }
+
+        .page-title {
+            font-size: 28px;
+            margin-bottom: 25px;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* Form styles */
+        .form-container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        .form-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 15px;
+            margin-top: 30px;
+        }
+
+        /* Table styles */
+        .table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0 10px;
+        }
+
+        .table th {
+            text-align: left;
+            padding: 15px;
+            font-weight: 600;
+            color: var(--primary);
+        }
+
+        .table td {
+            padding: 15px;
+            background: var(--card-bg);
+            border: none;
+        }
+
+        .table tr {
+            box-shadow: 5px 5px 10px var(--shadow-dark), 
+                        -5px -5px 10px var(--shadow-light);
+            border-radius: 15px;
+        }
+
+        /* Alert styles */
+        .alert {
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .alert-success {
+            background-color: #d4edda;
+            color: #155724;
+        }
+
+        .alert-error {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+
+        /* Footer */
+        footer {
+            background: var(--card-bg);
+            box-shadow: 0 -4px 10px var(--shadow-dark), 
+                        0 4px 10px var(--shadow-light);
+            padding: 20px 0;
+            text-align: center;
+            margin-top: 50px;
+        }
+
+        /* Responsive adjustments */
+       @media (max-width: 768px) {
+            .header-container {
+                flex-direction: column;
+                gap: 15px;
+            }
+            
+            nav {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+            
+            .table {
+                display: block;
+                overflow-x: auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+            <div class="container header-container">
+        <a href="{{ url_for('main.index') }}" class="logo">
+            <img src="{{ url_for('static', filename='images/logo.jpg') }}" alt="SurveyZim Logo" style="height:50px; width:auto;">
+            <span>SurveyZim</span>
+        </a>
+            <nav>
+                <a href="{{ url_for('main.index') }}"><i class="fas fa-home"></i> Home</a>
+                {% if current_user.is_authenticated %}
+                    <a href="{{ url_for('main.dashboard') }}"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+                    <a href="{{ url_for('main.logout') }}"><i class="fas fa-sign-out-alt"></i> Logout</a>
+                {% else %}
+                    <a href="{{ url_for('main.login') }}"><i class="fas fa-sign-in-alt"></i> Login</a>
+                    <a href="{{ url_for('main.register') }}"><i class="fas fa-user-plus"></i> Register</a>
+                {% endif %}
+            </nav>
+        </div>
+    </header>
+
+    <main class="container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">
+                        <i class="fas fa-info-circle"></i> {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2023 SurveyZim. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script>
+        // Basic interactivity for the UI
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add question button functionality
+            const addQuestionBtn = document.getElementById('add-question');
+            if (addQuestionBtn) {
+                addQuestionBtn.addEventListener('click', function() {
+                    const questionList = document.getElementById('question-list');
+                    const newQuestion = document.createElement('div');
+                    newQuestion.className = 'neu-card question-item';
+                    newQuestion.innerHTML = `
+                        <div class="form-group">
+                            <label>Question Text</label>
+                            <input type="text" class="neu-input" name="question-text" placeholder="Enter your question">
+                        </div>
+                        <div class="form-group">
+                            <label>Question Type</label>
+                            <select class="neu-input" name="question-type">
+                                <option value="multiple_choice">Multiple Choice</option>
+                                <option value="text">Text Input</option>
+                                <option value="rating">Rating Scale</option>
+                                <option value="checkbox">Checkboxes</option>
+                            </select>
+                        </div>
+                        <div class="option-list">
+                            <div class="option-item">
+                                <input type="text" class="neu-input" name="option-text" placeholder="Option 1">
+                                <button type="button" class="neu-btn remove-option">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <button type="button" class="neu-btn add-option">
+                            <i class="fas fa-plus"></i> Add Option
+                        </button>
+                        <div class="question-actions">
+                            <button type="button" class="neu-btn neu-btn-danger remove-question">
+                                <i class="fas fa-trash"></i> Delete Question
+                            </button>
+                        </div>
+                    `;
+                    questionList.appendChild(newQuestion);
+                    
+                    // Add event listeners to the new elements
+                    const removeQuestionBtn = newQuestion.querySelector('.remove-question');
+                    removeQuestionBtn.addEventListener('click', function() {
+                        questionList.removeChild(newQuestion);
+                    });
+                    
+                    const addOptionBtn = newQuestion.querySelector('.add-option');
+                    addOptionBtn.addEventListener('click', function() {
+                        const optionList = newQuestion.querySelector('.option-list');
+                        const newOption = document.createElement('div');
+                        newOption.className = 'option-item';
+                        newOption.innerHTML = `
+                            <input type="text" class="neu-input" name="option-text" placeholder="Option">
+                            <button type="button" class="neu-btn remove-option">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        `;
+                        optionList.appendChild(newOption);
+                        
+                        // Add event listener to remove button
+                        const removeOptionBtn = newOption.querySelector('.remove-option');
+                        removeOptionBtn.addEventListener('click', function() {
+                            optionList.removeChild(newOption);
+                        });
+                    });
+                    
+                    // Add event listeners to existing remove option buttons
+                    const removeOptionBtns = newQuestion.querySelectorAll('.remove-option');
+                    removeOptionBtns.forEach(btn => {
+                        btn.addEventListener('click', function() {
+                            this.parentElement.remove();
+                        });
+                    });
+                });
+            }
+            
+            // Add event listeners to existing remove question buttons
+            const removeQuestionBtns = document.querySelectorAll('.remove-question');
+            removeQuestionBtns.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    this.closest('.question-item').remove();
+                });
+            });
+            
+            // Add event listeners to existing add option buttons
+            const addOptionBtns = document.querySelectorAll('.add-option');
+            addOptionBtns.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const optionList = this.previousElementSibling;
+                    const newOption = document.createElement('div');
+                    newOption.className = 'option-item';
+                    newOption.innerHTML = `
+                        <input type="text" class="neu-input" name="option-text" placeholder="Option">
+                        <button type="button" class="neu-btn remove-option">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    `;
+                    optionList.appendChild(newOption);
+                    
+                    // Add event listener to remove button
+                    const removeOptionBtn = newOption.querySelector('.remove-option');
+                    removeOptionBtn.addEventListener('click', function() {
+                        optionList.removeChild(newOption);
+                    });
+                });
+            });
+            
+            // Add event listeners to existing remove option buttons
+            const removeOptionBtns = document.querySelectorAll('.remove-option');
+            removeOptionBtns.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    this.parentElement.remove();
+                });
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,106 @@
+{% extends "layout.html" %}
+
+{% block title %}Payment - {{ plan.name }} - SurveyZim{% endblock %}
+
+{% block content %}
+<div class="form-container">
+    <div class="neu-card">
+        <h2 class="page-title">
+            <i class="fas fa-mobile-alt"></i> {{ plan.name }}
+        </h2>
+        
+        <div class="payment-details">
+            <div class="payment-plan">
+                <h3>Plan Details</h3>
+                <div class="plan-features">
+                    <div class="feature">
+                        <span class="label">Price:</span>
+                        <span class="value">{{ plan.price }}</span>
+                    </div>
+                    <div class="feature">
+                        <span class="label">Word Limit:</span>
+                        <span class="value">{{ plan.word_limit }}</span>
+                    </div>
+                    {% for feature in plan.features %}
+                    <div class="feature">
+                        <span class="label">Feature:</span>
+                        <span class="value">{{ feature }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            
+            <div class="payment-form">
+                <h3>EcoCash Payment</h3>
+                <form action="{{ url_for('main.process_payment', package=package) }}" method="POST">
+                    <div class="form-group">
+                        <label for="phone">EcoCash Number</label>
+                        <input type="text" id="phone" name="phone" class="neu-input" placeholder="077XXXXXXX or +26377XXXXXXX" required>
+                    </div>
+
+                    <div class="form-actions">
+                        <a href="{{ url_for('main.payment_select') }}" class="neu-btn">
+                            <i class="fas fa-arrow-left"></i> Back to Plans
+                        </a>
+                        <button type="submit" class="neu-btn neu-btn-primary">
+                            <i class="fas fa-lock"></i> Pay with EcoCash
+                        </button>
+                    </div>
+                </form>
+                <p class="info-text">
+                    💡 After you click "Pay with EcoCash", a push notification will be sent to your phone asking you to enter your EcoCash PIN.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .payment-details {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 30px;
+        margin-top: 20px;
+    }
+    
+    .payment-plan, .payment-form {
+        padding: 20px;
+        background: rgba(76, 175, 80, 0.05);
+        border-radius: 10px;
+    }
+    
+    .payment-plan h3, .payment-form h3 {
+        margin-bottom: 20px;
+        color: var(--primary);
+    }
+    
+    .plan-features {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .feature {
+        display: flex;
+        justify-content: space-between;
+        padding: 8px 0;
+        border-bottom: 1px solid #eee;
+    }
+    
+    .feature .label {
+        font-weight: bold;
+    }
+    
+    .info-text {
+        margin-top: 15px;
+        font-size: 0.9rem;
+        color: #555;
+    }
+    
+    @media (max-width: 768px) {
+        .payment-details {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}

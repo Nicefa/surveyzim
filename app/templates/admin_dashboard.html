@@ -1,0 +1,30 @@
+<!-- templates/admin_dashboard.html -->
+{% extends "layout.html" %}
+{% block title %}Admin Dashboard{% endblock %}
+
+{% block content %}
+<h2>Welcome, Admin</h2>
+<p>Here are all surveys and links:</p>
+
+<div class="survey-list">
+    {% for survey in surveys %}
+    <div class="neu-card" style="margin-bottom: 15px; padding: 15px;">
+        <h3>{{ survey.title }}</h3>
+        <p>{{ survey.description }}</p>
+        <p>Plan: {{ survey.plan_name }} | Days: {{ survey.distribution_days }}</p>
+
+        <input type="text" value="{{ url_for('main.take_survey', survey_id=survey.id, _external=True) }}" readonly>
+        <button onclick="copyLink(this)">Copy Link</button>
+    </div>
+    {% endfor %}
+</div>
+
+<script>
+function copyLink(button) {
+    const input = button.previousElementSibling;
+    input.select();
+    document.execCommand('copy');
+    alert('Survey link copied!');
+}
+</script>
+{% endblock %}

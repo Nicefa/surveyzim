@@ -1,0 +1,27 @@
+{% extends "layout.html" %}
+
+{% block title %}Contact Sales - SurveyZim{% endblock %}
+
+{% block content %}
+<div class="form-container">
+    <div class="neu-card" style="max-width:600px; margin:0 auto;">
+        <h2>Contact Sales</h2>
+        <p>Fill the form below or email us at <a href="mailto:sales@surveyzim.com">sales@surveyzim.com</a>.</p>
+        <form method="POST" action="#">
+            <div class="form-group">
+                <label>Name</label>
+                <input type="text" name="name" class="neu-input" required>
+            </div>
+            <div class="form-group">
+                <label>Email</label>
+                <input type="email" name="email" class="neu-input" required>
+            </div>
+            <div class="form-group">
+                <label>Message</label>
+                <textarea name="message" class="neu-input" rows="5" required></textarea>
+            </div>
+            <button type="submit" class="neu-btn neu-btn-primary">Send</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

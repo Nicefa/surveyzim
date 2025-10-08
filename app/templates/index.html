@@ -1,0 +1,504 @@
+{% extends "layout.html" %}
+
+{% block title %}Home - SurveyZim{% endblock %}
+
+{% block content %}
+<div class="neu-card hero" style="margin-top: 100px;">
+    <h1>Welcome to SurveyZim</h1>
+    <p>Create and manage surveys easily with our intuitive platform.</p>
+    {% if current_user.is_authenticated %}
+        <a href="{{ url_for('main.dashboard') }}" class="neu-btn neu-btn-primary">
+            <i class="fas fa-tachometer-alt"></i> Go to Dashboard
+        </a>
+    {% else %}
+        <a href="{{ url_for('main.register') }}" class="neu-btn neu-btn-primary">
+            <i class="fas fa-user-plus"></i> Get Started
+        </a>
+    {% endif %}
+</div>
+
+<div class="features">
+    <div class="neu-card feature-card">
+        <i class="fas fa-edit fa-3x"></i>
+        <h3>Create Surveys</h3>
+        <p>Design beautiful surveys with multiple question types.</p>
+    </div>
+    <div class="neu-card feature-card">
+        <i class="fas fa-share-alt fa-3x"></i>
+        <h3>Distribute Easily</h3>
+        <p>Share your surveys via link, email, or social media.</p>
+    </div>
+    <div class="neu-card feature-card">
+        <i class="fas fa-chart-bar fa-3x"></i>
+        <h3>Analyze Results</h3>
+        <p>Gain insights with real-time analytics and reporting.</p>
+    </div>
+</div>
+
+<!-- Pricing/Packages Section -->
+<section class="pricing-section">
+    <h2 class="section-title">Choose Your Plan</h2>
+    <p class="section-subtitle">Select the package that fits your survey needs</p>
+    
+    <div class="pricing-cards">
+        <!-- Student Plan -->
+        <div class="neu-card pricing-card">
+            <div class="pricing-header">
+                <h3>Student Plan</h3>
+                <div class="price">
+                    <span class="currency">$</span>
+                    <span class="amount">30</span>
+                    <span class="period">one-time</span>
+                </div>
+                <p class="plan-description">For students (dissertations, academic research)</p>
+            </div>
+            <div class="key-features">
+                <div class="feature-highlight">
+                    <span class="feature-value">800</span>
+                    <span class="feature-label">Word Limit</span>
+                </div>
+                <div class="feature-highlight">
+                    <span class="feature-value">200</span>
+                    <span class="feature-label">Responses</span>
+                </div>
+                <div class="feature-highlight">
+                    <span class="feature-value">10</span>
+                    <span class="feature-label">Days</span>
+                </div>
+            </div>
+            <ul class="features-list">
+                <li><i class="fas fa-check"></i> 1 survey</li>
+                <li><i class="fas fa-check"></i> Up to 200 valid responses</li>
+                <li><i class="fas fa-check"></i> <strong>Max 800-word survey</strong></li>
+                <li><i class="fas fa-check"></i> CSV export only</li>
+                <li><i class="fas fa-check"></i> Distribution: up to 10 days</li>
+                <li><i class="fas fa-times"></i> No targeting</li>
+                <li><i class="fas fa-times"></i> No edits post-confirmation</li>
+            </ul>
+            {% if current_user.is_authenticated %}
+            <div class="plan-actions">
+            <button class="neu-btn neu-btn-primary select-plan-btn" data-package="student" data-word-limit="800">
+                Select Plan
+            </button>
+            <div class="plan-options" style="display:none;">
+                <a href="{{ url_for('main.payment', package='student') }}" class="neu-btn neu-btn-primary">Pay Now</a>
+                <a href="{{ url_for('main.create_survey', package='student', word_limit=800) }}" class="neu-btn neu-btn-secondary">Create Survey First</a>
+            </div>
+        </div>
+        {% else %}
+            <a href="{{ url_for('main.register') }}" class="neu-btn neu-btn-primary">Sign Up</a>
+        {% endif %}
+    </div>
+        
+        <!-- Basic Plan -->
+        <div class="neu-card pricing-card featured">
+            <div class="popular-badge">Popular</div>
+            <div class="pricing-header">
+                <h3>Basic Plan</h3>
+                <div class="price">
+                    <span class="currency">$</span>
+                    <span class="amount">70</span>
+                    <span class="period">one-time</span>
+                </div>
+                <p class="plan-description">For small orgs, NGOs, solo researchers</p>
+            </div>
+            <div class="key-features">
+                <div class="feature-highlight">
+                    <span class="feature-value">1,500</span>
+                    <span class="feature-label">Word Limit</span>
+                </div>
+                <div class="feature-highlight">
+                    <span class="feature-value">750</span>
+                    <span class="feature-label">Responses</span>
+                </div>
+                <div class="feature-highlight">
+                    <span class="feature-value">14</span>
+                    <span class="feature-label">Days</span>
+                </div>
+            </div>
+            <ul class="features-list">
+                <li><i class="fas fa-check"></i> 1 survey</li>
+                <li><i class="fas fa-check"></i> Up to 750 valid responses</li>
+                <li><i class="fas fa-check"></i> <strong>Max 1,500-word survey</strong></li>
+                <li><i class="fas fa-check"></i> CSV export only</li>
+                <li><i class="fas fa-check"></i> Distribution: up to 14 days</li>
+                <li><i class="fas fa-check"></i> Light demographic targeting</li>
+                <li><i class="fas fa-check"></i> 1 active survey</li>
+            </ul>
+            {% if current_user.is_authenticated %}
+            <div class="plan-actions">
+            <button class="neu-btn neu-btn-primary select-plan-btn" data-package="basic" data-word-limit="1500">
+                Select Plan
+            </button>
+            <div class="plan-options" style="display:none;">
+                <a href="{{ url_for('main.payment', package='basic') }}" class="neu-btn neu-btn-primary">Pay Now</a>
+                <a href="{{ url_for('main.create_survey', package='basic', word_limit=1500) }}" class="neu-btn neu-btn-secondary">Create Survey First</a>
+            </div>
+        </div>
+        {% else %}
+            <a href="{{ url_for('main.register') }}" class="neu-btn neu-btn-primary">Sign Up</a>
+        {% endif %}
+    </div>
+        
+        <!-- Extended Plan -->
+        <div class="neu-card pricing-card">
+            <div class="pricing-header">
+                <h3>Extended Plan</h3>
+                <div class="price">
+                    <span class="currency">$</span>
+                    <span class="amount">120</span>
+                    <span class="period">one-time</span>
+                </div>
+                <p class="plan-description">For medium to large organizations</p>
+            </div>
+            <div class="key-features">
+                <div class="feature-highlight">
+                    <span class="feature-value">3,000</span>
+                    <span class="feature-label">Word Limit</span>
+                </div>
+                <div class="feature-highlight">
+                    <span class="feature-value">1,200</span>
+                    <span class="feature-label">Responses</span>
+                </div>
+                <div class="feature-highlight">
+                    <span class="feature-value">30</span>
+                    <span class="feature-label">Days</span>
+                </div>
+            </div>
+            <ul class="features-list">
+                <li><i class="fas fa-check"></i> 1 survey</li>
+                <li><i class="fas fa-check"></i> Up to 1,200 valid responses</li>
+                <li><i class="fas fa-check"></i> <strong>Max 3,000-word survey</strong></li>
+                <li><i class="fas fa-check"></i> CSV export only</li>
+                <li><i class="fas fa-check"></i> Distribution: up to 30 days</li>
+                <li><i class="fas fa-check"></i> Demographic targeting (age, gender, location)</li>
+                <li><i class="fas fa-check"></i> Multiple active surveys</li>
+            </ul>
+            {% if current_user.is_authenticated %}
+            <div class="plan-actions">
+            <button class="neu-btn neu-btn-primary select-plan-btn" data-package="extended" data-word-limit="3000">
+                Select Plan
+            </button>
+            <div class="plan-options" style="display:none;">
+                <a href="{{ url_for('main.payment', package='extended') }}" class="neu-btn neu-btn-primary">Pay Now</a>
+                <a href="{{ url_for('main.create_survey', package='extended', word_limit=3000) }}" class="neu-btn neu-btn-secondary">Create Survey First</a>
+            </div>
+        </div>
+        {% else %}
+            <a href="{{ url_for('main.register') }}" class="neu-btn neu-btn-primary">Sign Up</a>
+        {% endif %}
+    </div>
+        
+        <!-- Enterprise Plan -->
+        <div class="neu-card pricing-card">
+            <div class="pricing-header">
+                <h3>Enterprise Plan</h3>
+                <div class="price">
+                    <span class="currency">Starting at</span>
+                    <span class="amount">250</span>
+                    <span class="period">custom</span>
+                </div>
+                <p class="plan-description">For corporates, research firms, development partners</p>
+            </div>
+            <div class="key-features">
+                <div class="feature-highlight">
+                    <span class="feature-value">5,000</span>
+                    <span class="feature-label">Word Limit</span>
+                </div>
+                <div class="feature-highlight">
+                    <span class="feature-value">1,600</span>
+                    <span class="feature-label">Responses</span>
+                </div>
+                <div class="feature-highlight">
+                    <span class="feature-value">60</span>
+                    <span class="feature-label">Days</span>
+                </div>
+            </div>
+            <ul class="features-list">
+                <li><i class="fas fa-check"></i> 1 survey</li>
+                <li><i class="fas fa-check"></i> Upto 1,600 valid responses</li>
+                <li><i class="fas fa-check"></i> <strong>Max 5,000-word survey</strong></li>
+                <li><i class="fas fa-check"></i> CSV export only</li>
+                <li><i class="fas fa-check"></i> Distribution: up to 60 days</li>
+                <li><i class="fas fa-check"></i> Advanced custom targeting</li>
+                <li><i class="fas fa-check"></i> Full support</li>
+            </ul>
+            {% if current_user.is_authenticated %}
+            <div class="plan-actions">
+            <button class="neu-btn neu-btn-primary select-plan-btn" data-package="enterprise" data-word-limit="5000">
+                Select Plan
+            </button>
+            <div class="plan-options" style="display:none;">
+                <a href="{{ url_for('main.payment', package='enterprise') }}" class="neu-btn neu-btn-primary">Pay Now</a>
+                <a href="{{ url_for('main.create_survey', package='enterprise', word_limit=5000) }}" class="neu-btn neu-btn-secondary">Create Survey First</a>
+            </div>
+        </div>
+        {% else %}
+            <a href="{{ url_for('main.register') }}" class="neu-btn neu-btn-primary">Sign Up</a>
+        {% endif %}
+    </div>
+</div>
+</section>
+
+<!-- Add-ons Section -->
+<section class="addons-section">
+    <h2 class="section-title">Optional Add-Ons</h2>
+    <p class="section-subtitle">Enhance your survey experience with these add-ons</p>
+    
+    <div class="addons-grid">
+        <div class="neu-card addon-card">
+            <h3>Extra 500 responses</h3>
+            <div class="addon-price">$20</div>
+            <p>Add 500 more responses to your survey</p>
+        </div>
+        
+        <div class="neu-card addon-card">
+            <h3>7 extra distribution days</h3>
+            <div class="addon-price">$10</div>
+            <p>Extend your survey distribution period by 7 days</p>
+        </div>
+        
+        <div class="neu-card addon-card">
+            <h3>Custom demographic filters</h3>
+            <div class="addon-price">$15</div>
+            <p>Add custom demographic filters to your survey</p>
+        </div>
+        
+        <div class="neu-card addon-card">
+            <h3>Re-distribute survey (1 round)</h3>
+            <div class="addon-price">$10</div>
+            <p>Re-distribute your survey for an additional round</p>
+        </div>
+    </div>
+</section>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('.select-plan-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            btn.style.display = 'none';
+            btn.parentElement.querySelector('.plan-options').style.display = 'flex';
+        });
+    });
+});
+</script>
+<style>
+    .neu-card {
+        background: var(--card-bg);
+        border-radius: 15px;
+        box-shadow: 5px 5px 15px var(--shadow-light), -5px -5px 15px rgba(255, 255, 255, 0.8);
+        padding: 25px;
+        margin: 0 0 25px 0;
+        transition: all 0.3s ease;
+    }
+    .pricing-section, .addons-section {
+        margin: 50px 0;
+        text-align: center;
+    }
+    
+    .section-title {
+        font-size: 32px;
+        color: var(--primary);
+        margin-bottom: 10px;
+    }
+    
+    .section-subtitle {
+        font-size: 18px;
+        color: #666;
+        margin-bottom: 40px;
+    }
+    
+    .pricing-cards, .addons-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 30px;
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+    
+    .pricing-card, .addon-card {
+        padding: 30px;
+        position: relative;
+        transition: transform 0.3s ease;
+        height: fit-content;
+    }
+    
+    .pricing-card:hover, .addon-card:hover {
+        transform: translateY(-5px);
+    }
+    
+    .pricing-card.featured {
+        border: 2px solid var(--primary);
+        transform: scale(1.05);
+    }
+    
+    .pricing-card.featured:hover {
+        transform: scale(1.05) translateY(-5px);
+    }
+    
+    .popular-badge {
+        position: absolute;
+        top: -10px;
+        right: 20px;
+        background: var(--primary);
+        color: white;
+        padding: 5px 15px;
+        border-radius: 20px;
+        font-size: 14px;
+        font-weight: bold;
+    }
+    
+    .pricing-header {
+        margin-bottom: 20px;
+        padding-bottom: 20px;
+        border-bottom: 1px solid #eee;
+    }
+    
+    .pricing-header h3 {
+        font-size: 24px;
+        color: var(--primary);
+        margin-bottom: 10px;
+    }
+    
+    .plan-description {
+        font-style: italic;
+        color: #666;
+        margin-top: 10px;
+        font-size: 14px;
+    }
+    
+    .plan-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin-top: 20px;
+}
+
+.plan-actions .neu-btn-secondary {
+    background: var(--secondary);
+    color: #666;
+}
+
+    .key-features {
+        display: flex;
+        justify-content: space-around;
+        margin: 20px 0;
+        padding: 15px 0;
+        background: rgba(76, 175, 80, 0.1);
+        border-radius: 10px;
+    }
+    
+    .feature-highlight {
+        text-align: center;
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .feature-value {
+        font-size: 24px;
+        font-weight: bold;
+        color: var(--primary);
+    }
+    
+    .feature-label {
+        font-size: 12px;
+        color: #666;
+        margin-top: 5px;
+        text-transform: uppercase;
+    }
+    
+    .price {
+        display: flex;
+        align-items: baseline;
+        justify-content: center;
+        gap: 5px;
+        flex-wrap: wrap;
+    }
+    
+    .currency {
+        font-size: 16px;
+        font-weight: bold;
+        color: var(--primary);
+    }
+    
+    .amount {
+        font-size: 42px;
+        font-weight: bold;
+        color: var(--text);
+    }
+    
+    .period {
+        font-size: 14px;
+        color: #666;
+        flex-basis: 100%;
+        margin-top: 5px;
+    }
+    
+    .features-list {
+        list-style: none;
+        padding: 0;
+        margin: 0 0 25px 0;
+        text-align: left;
+    }
+    
+    .features-list li {
+        margin-bottom: 10px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 14px;
+    }
+    
+    .features-list strong {
+        color: var(--primary);
+    }
+    
+    .features-list .fa-check {
+        color: var(--primary);
+    }
+    
+    .features-list .fa-times {
+        color: #ccc;
+    }
+    
+    .addon-card {
+        text-align: center;
+    }
+    
+    .addon-card h3 {
+        font-size: 18px;
+        color: var(--primary);
+        margin-bottom: 10px;
+    }
+    
+    .addon-price {
+        font-size: 24px;
+        font-weight: bold;
+        color: var(--text);
+        margin-bottom: 15px;
+    }
+    
+    .addon-card p {
+        color: #666;
+        font-size: 14px;
+    }
+    
+    @media (max-width: 768px) {
+        .pricing-cards, .addons-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .pricing-card.featured {
+            transform: scale(1);
+        }
+        
+        .pricing-card.featured:hover {
+            transform: translateY(-5px);
+        }
+        
+        .key-features {
+            flex-direction: column;
+            gap: 15px;
+        }
+    }
+</style>
+{% endblock %}

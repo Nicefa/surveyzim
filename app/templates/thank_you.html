@@ -1,0 +1,16 @@
+{% extends "layout.html" %}
+
+{% block title %}Thank You - SurveyZim{% endblock %}
+
+{% block content %}
+<div class="container" style="padding: 20px 0; text-align: center;">
+    <div class="neu-card">
+        <h2><i class="fas fa-check-circle" style="color: green; font-size: 3em;"></i></h2>
+        <h2>Thank You!</h2>
+        <p>Your response has been recorded successfully.</p>
+        <a href="{{ url_for('main.index') }}" class="neu-btn neu-btn-primary">
+            <i class="fas fa-home"></i> Return to Home
+        </a>
+    </div>
+</div>
+{% endblock %}

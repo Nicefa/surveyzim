@@ -1,0 +1,1466 @@
+{% extends "layout.html" %}
+
+{% block title %}Create Survey - SurveyZim{% endblock %}
+
+{% block content %}
+<div class="container" style="padding: 20px 0">
+    <!-- Survey Header -->
+    <div class="neu-card">
+    <h2 class="page-title"><i class="fas fa-poll"></i> {{ survey.title }}</h2>
+    <p>{{ survey.description }}</p>
+ 
+    <div class="word-count-info">
+        <i class="fas fa-info-circle"></i>
+        Your current plan: <strong id="plan-name-display">{{ plan_name }}</strong>
+        (Max <span id="word-limit-display">{{ word_limit }}</span> words)
+    
+    <!-- Add this in the survey header section, after the word count info -->
+<div class="neu-card">
+    <h3><i class="fas fa-image"></i> Survey Logo</h3>
+    
+    {% if survey.logo_filename %}
+    <div style="text-align: center; margin: 20px 0;">
+        <img src="{{ url_for('static', filename='survey_logos/' + survey.logo_filename) }}" 
+             alt="Survey Logo" 
+             style="max-height: 150px; max-width: 300px; border-radius: 10px; box-shadow: 0 3px 10px rgba(0,0,0,0.1);">
+    </div>
+    
+    <form action="{{ url_for('main.remove_survey_logo', survey_id=survey.id) }}" method="POST" style="text-align: center;">
+        <button type="submit" class="neu-btn neu-btn-danger">
+            <i class="fas fa-trash"></i> Remove Logo
+        </button>
+    </form>
+    {% else %}
+    <div style="text-align: center; padding: 20px; border: 2px dashed #ddd; border-radius: 10px; margin: 20px 0;">
+        <i class="fas fa-image" style="font-size: 48px; color: #ccc; margin-bottom: 10px;"></i>
+        <p style="color: #666; margin-bottom: 15px;">No logo uploaded</p>
+    </div>
+    {% endif %}
+    
+    <form action="{{ url_for('main.upload_survey_logo', survey_id=survey.id) }}" method="POST" enctype="multipart/form-data" style="margin-top: 20px;">
+        <div class="form-group">
+            <label for="logo">Upload Logo</label>
+            <input type="file" name="logo" id="logo" class="neu-input" accept="image/*" required>
+            <small style="color: #666; display: block; margin-top: 5px;">
+                Supported formats: JPG, PNG, GIF. Max size: 5MB
+            </small>
+        </div>
+        <button type="submit" class="neu-btn neu-btn-primary">
+            <i class="fas fa-upload"></i> Upload Logo
+        </button>
+    </form>
+</div>
+
+        <div class="word-count-display">
+            <span id="total-word-count">{{ total_word_count }}</span> / 
+            <span id="word-limit">{{ word_limit }}</span> words
+        </div>
+
+        <!-- Progress Bar Container -->
+        <div class="progress-bar-container">
+            <div class="progress-bar">
+                <div id="word-progress" class="progress"></div>
+            </div>
+        </div>
+        
+        <!-- Warning message -->
+        <div id="word-limit-warning" class="word-limit-warning">
+            <i class="fas fa-exclamation-triangle"></i>
+            Word limit exceeded! You cannot publish until you reduce content or upgrade your plan.
+        </div>
+    </div>
+</div>
+
+<!-- Add a hidden element to store the server data -->
+<div id="server-data" 
+     data-progress-width="{{ progress_width }}"
+     data-is-over-limit="{{ 'true' if is_over_limit else 'false' }}"
+     style="display: none;">
+</div>
+
+<script>
+// Initialize progress bar and warning from server data
+document.addEventListener("DOMContentLoaded", function() {
+    // Get data from the hidden element
+    const serverData = document.getElementById('server-data');
+    const progressWidth = parseInt(serverData.dataset.progressWidth);
+    const isOverLimit = serverData.dataset.isOverLimit === 'true';
+    
+    // Set progress bar width
+    document.getElementById('word-progress').style.width = progressWidth + '%';
+    
+    // Show/hide warning
+    document.getElementById('word-limit-warning').style.display = isOverLimit ? 'block' : 'none';
+    
+    // Change progress bar color if over limit
+    if (isOverLimit) {
+        document.getElementById('word-progress').style.backgroundColor = 'var(--danger)';
+    }
+});
+</script>
+
+<!-- Add Question Form -->
+<div class="neu-card">
+    <h3>Add Question</h3>
+    <form method="POST" id="question-form" action="{{ url_for('main.survey_view', survey_id=survey.id) }}">
+        <div id="questions-container"></div>
+
+        <div class="form-actions" style="margin-top: 20px;">
+            <button type="button" id="add-question" class="neu-btn neu-btn-primary"
+                {% if survey.published %}disabled title="Survey already published. Cannot add questions."{% endif %}>
+                <i class="fas fa-plus"></i> Add Question
+            </button>
+        </div>
+
+        <div class="form-actions" style="margin-top: 30px;">
+            <button type="submit" class="neu-btn neu-btn-success" id="submit-questions"
+                {% if survey.published %}disabled title="Survey already published. Cannot save questions."{% endif %}>
+                <i class="fas fa-save"></i> Save Questions
+            </button>
+            <a href="{{ url_for('main.dashboard') }}" class="neu-btn">
+                <i class="fas fa-arrow-left"></i> Back to Dashboard
+            </a>
+        </div>
+    </form>
+</div>
+
+    <!-- Existing Questions with Edit Functionality -->
+<div class="neu-card">
+    <h3>Existing Questions ({{ questions|length }})</h3>
+    <div id="existing-questions-container" style="max-height: 400px; overflow-y: auto; padding: 10px; border: 1px solid #e0e0e0; border-radius: 8px; background: #f9f9f9;">
+        <div id="existing-questions-list">
+            {% if questions %}
+                {% for q in questions %}
+                    <div class="neu-card question-item" data-question-id="{{ q.id }}" style="margin-bottom: 15px;">
+                        <!-- View Mode -->
+                        <div class="question-view-mode">
+                            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                                <div style="flex: 1;">
+                                    <strong>{{ loop.index }}. {{ q.text }}</strong>
+                                    <div>
+                                        Type: {{ q.qtype | replace('_', ' ') | title }} | 
+                                        Words: {{ q.word_count }} | 
+                                        Required: {{ q.required if q.required is defined else 'False' }}
+                                    </div>
+                                    
+                                    {% if q.options %}
+                                        <div style="margin-top:10px;">
+                                            <strong>Options ({{ q.options|length }}):</strong>
+                                            <ul style="margin-top:5px; padding-left:20px;">
+                                                {% for opt in q.options %}
+                                                    <li>{{ opt.text }}</li>
+                                                {% endfor %}
+                                            </ul>
+                                        </div>
+                                    {% else %}
+                                        <div style="color: orange; margin-top:5px;">
+                                            No options (type: {{ q.qtype | replace('_', ' ') | title }})
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                
+                                <div style="display: flex; gap: 5px; margin-left: 15px;">
+                                    <button type="button" class="neu-btn neu-btn-primary edit-question-btn" 
+                                            {% if survey.published %}disabled title="Survey already published. Cannot edit question."{% endif %}>
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <form action="{{ url_for('main.delete_question', question_id=q.id) }}" method="POST" style="display: inline;">
+                                        <button type="submit" class="neu-btn neu-btn-danger"
+                                            onclick="return confirm('Are you sure you want to delete this question?')"
+                                            {% if survey.published %}disabled title="Survey already published. Cannot delete question."{% endif %}>
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Edit Mode (Initially Hidden) -->
+                        <div class="question-edit-mode" style="display: none;">
+                            <form method="POST" class="edit-question-form" 
+                                  action="{{ url_for('main.update_question', question_id=q.id) }}">
+                                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 15px;">
+                                    <label><strong>Edit Question {{ loop.index }}</strong></label>
+                                    <div>
+                                        <button type="submit" class="neu-btn neu-btn-success">
+                                            <i class="fas fa-save"></i> Save
+                                        </button>
+                                        <button type="button" class="neu-btn cancel-edit-btn">
+                                            <i class="fas fa-times"></i> Cancel
+                                        </button>
+                                    </div>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label>Question Text</label>
+                                    <input type="text" name="question_text" class="neu-input edit-question-text" 
+                                           value="{{ q.text }}" placeholder="Enter your question" required>
+                                    <div class="question-word-count">
+                                        <span class="edit-question-word-count">{{ q.word_count }}</span> words in this question
+                                    </div>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label>Question Type</label>
+                                   <select name="question_type" class="neu-input edit-question-type">
+                                    <option value="short" {% if q.qtype == 'short' %}selected{% endif %}>Short answer</option>
+                                    <option value="paragraph" {% if q.qtype == 'paragraph' %}selected{% endif %}>Paragraph</option>
+                                    <option value="multiple_choice" {% if q.qtype == 'multiple_choice' %}selected{% endif %}>Multiple choice</option>
+                                    <option value="checkbox" {% if q.qtype == 'checkbox' %}selected{% endif %}>Checkboxes</option>
+                                    <option value="dropdown" {% if q.qtype == 'dropdown' %}selected{% endif %}>Dropdown</option>
+                                   <option value="linear_scale" {% if q.qtype == 'linear_scale' %}selected{% endif %}>Linear Scale</option>
+                                </select>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label class="required-toggle">
+                                        <input type="checkbox" name="question_required" value="true" 
+                                               {% if q.required %}checked{% endif %}> Required
+                                    </label>
+                                </div>
+                                
+                               <!-- Options Container for MCQ, Checkbox, Dropdown -->
+<div class="edit-options-container {% if q.qtype in ['multiple_choice', 'checkbox', 'dropdown'] %}show-options{% endif %}">
+    <label><strong>Options</strong></label>
+    <div class="edit-options-list">
+        {% if q.options %}
+            {% for opt in q.options %}
+                <div class="option-input-group">
+                    <input type="text" class="neu-input edit-option-text" 
+                           name="options[]" value="{{ opt.text }}" placeholder="Option text" required>
+                    <button type="button" class="neu-btn neu-btn-danger remove-option">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    </div>
+    <button type="button" class="neu-btn neu-btn-secondary add-edit-option" style="margin-top: 10px;">
+        <i class="fas fa-plus"></i> Add Option
+    </button>
+    
+    <!-- Add Linear Scale Fields Here -->
+    <div class="edit-linear-scale-fields {% if q.qtype == 'linear_scale' %}show-linear-scale{% endif %}">
+        <label><strong>Linear Scale Settings</strong></label>
+        <div class="row mb-2">
+            <div class="col">
+                <label>Lowest Value</label>
+                <input type="number" class="neu-input edit-linear-scale-low" name="linear_scale_low" 
+                       value="{{ q.linear_scale_low if q.linear_scale_low else 1 }}" min="0" max="10">
+            </div>
+            <div class="col">
+                <label>Highest Value</label>
+                <input type="number" class="neu-input edit-linear-scale-high" name="linear_scale_high" 
+                       value="{{ q.linear_scale_high if q.linear_scale_high else 5 }}" min="1" max="10">
+            </div>
+        </div>
+        <div class="row">
+            <div class="col">
+                <label>Low Label (Optional)</label>
+                <input type="text" class="neu-input edit-linear-scale-low-label" name="linear_scale_low_label" 
+                       value="{{ q.linear_scale_low_label if q.linear_scale_low_label else '' }}" placeholder="e.g., Strongly disagree">
+            </div>
+            <div class="col">
+                <label>High Label (Optional)</label>
+                <input type="text" class="neu-input edit-linear-scale-high-label" name="linear_scale_high_label" 
+                       value="{{ q.linear_scale_high_label if q.linear_scale_high_label else '' }}" placeholder="e.g., Strongly agree">
+            </div>
+        </div>
+    </div>
+    
+    <!-- Validation message -->
+    <div class="option-validation-message" style="display: none; color: var(--danger); margin-top: 10px;">
+        <i class="fas fa-exclamation-triangle"></i>
+        Multiple choice, checkbox, and dropdown questions must have at least one option.
+    </div>
+</div>
+                            </form>
+                        </div>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <p style="text-align: center; padding: 20px; color: #666;">No questions added yet.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+<style>
+    /* Custom scrollbar styling */
+    #existing-questions-container {
+        scrollbar-width: thin;
+        scrollbar-color: #c1c1c1 #f1f1f1;
+    }
+    
+    #existing-questions-container::-webkit-scrollbar {
+        width: 12px;
+    }
+    
+    #existing-questions-container::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 6px;
+    }
+    
+    #existing-questions-container::-webkit-scrollbar-thumb {
+        background: #c1c1c1;
+        border-radius: 6px;
+        border: 2px solid #f1f1f1;
+    }
+    
+    #existing-questions-container::-webkit-scrollbar-thumb:hover {
+        background: #a8a8a8;
+    }
+    
+    /* Make the scroll container more visible */
+    #existing-questions-container:hover {
+        border-color: #4361ee;
+    }
+</style>
+
+<script>
+// Function to ensure scrollbar is always visible when content overflows
+function ensureScrollbarVisibility() {
+    const container = document.getElementById('existing-questions-container');
+    const content = document.getElementById('existing-questions-list');
+    
+    if (content.scrollHeight > container.clientHeight) {
+        container.style.borderColor = '#e0e0e0'; // Show border to indicate scrollable area
+    } else {
+        container.style.borderColor = 'transparent'; // Hide border if no scroll needed
+    }
+}
+
+// Check on page load and after any DOM changes
+document.addEventListener('DOMContentLoaded', ensureScrollbarVisibility);
+
+// Optional: Use a MutationObserver to detect when questions are added/removed
+const observer = new MutationObserver(ensureScrollbarVisibility);
+observer.observe(document.getElementById('existing-questions-list'), { 
+    childList: true, 
+    subtree: true 
+});
+</script>
+
+    <!-- Action Buttons -->
+<div class="form-actions">
+    <a href="{{ url_for('main.dashboard') }}" class="neu-btn">
+        <i class="fas fa-arrow-left"></i> Back to Dashboard
+    </a>
+    <!-- Preview Survey Button -->
+<a href="{{ url_for('main.preview_survey', survey_id=survey.id) }}" 
+   class="neu-btn neu-btn-secondary"
+   {% if questions|length == 0 %} disabled title="Add at least one question to preview survey." {% endif %}>
+    <i class="fas fa-eye"></i> Preview Survey
+</a>
+
+    <!-- Publish button -->
+    <form action="{{ url_for('main.publish_survey', survey_id=survey.id) }}" method="POST" style="display: inline;">
+        <button type="submit" class="neu-btn neu-btn-success" id="publish-btn"
+            {% if survey.published or total_word_count > word_limit or questions|length == 0 %}
+                disabled title="{% if survey.published %}Survey already published.{% else %}Cannot publish yet.{% endif %}"
+            {% endif %}>
+            <i class="fas fa-paper-plane"></i> Publish Survey
+        </button>
+    </form>
+
+    <!-- Upgrade Plan: real link if not published, disabled button if published -->
+    {% if survey.published %}
+        <button class="neu-btn neu-btn-primary" disabled title="Survey already published. Cannot upgrade plan.">
+            <i class="fas fa-arrow-up"></i> Upgrade Plan
+        </button>
+    {% else %}
+        <a href="{{ url_for('main.payment_select') }}" class="neu-btn neu-btn-primary">
+            <i class="fas fa-arrow-up"></i> Upgrade Plan
+        </a>
+    {% endif %}
+
+    <!-- Delete Survey: disabled if published -->
+    {% if survey.published %}
+        <button class="neu-btn neu-btn-danger" disabled title="Survey already published. Cannot delete survey.">
+            <i class="fas fa-trash"></i> Delete Survey
+        </button>
+    {% else %}
+        <form action="{{ url_for('main.delete_survey', survey_id=survey.id) }}" method="POST" style="display: inline;">
+            <button type="submit" class="neu-btn neu-btn-danger" onclick="return confirm('Are you sure you want to delete this survey? This action cannot be undone.')">
+                <i class="fas fa-trash"></i> Delete Survey
+            </button>
+        </form>
+    {% endif %}
+</div>
+
+<!-- Extra CSS for disabled buttons -->
+<style>
+    .neu-btn[disabled], 
+    .neu-btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        box-shadow: none !important;
+        filter: grayscale(50%);
+    }
+</style>
+
+
+
+
+{% if survey.published and (survey.response_count or 0) > 0 %}
+<div class="form-actions">
+    {% if distribution_over %}
+        <a href="{{ url_for('main.export_survey_responses', survey_id=survey.id) }}" class="neu-btn neu-btn-success">
+            <i class="fas fa-download"></i> Export Responses (CSV)
+        </a>
+    {% else %}
+        <button class="neu-btn neu-btn-success" disabled title="You can export responses once the distribution period is over.">
+            <i class="fas fa-download"></i> Export Responses (CSV)
+        </button>
+    {% endif %}
+</div>
+
+
+<script>
+function copySurveyLink() {
+    const linkInput = document.getElementById('survey-link');
+    linkInput.select();
+    document.execCommand('copy');
+    alert('Survey link copied to clipboard!');
+}
+</script>
+{% endif %}
+
+<style>
+    :root {
+        --primary: #4361ee;
+        --secondary: #6c757d;
+        --success: #28a745;
+        --danger: #dc3545;
+        --warning: #ffc107;
+        --light: #f8f9fa;
+        --dark: #343a40;
+        --background: #f0f2f5;
+        --card-bg: #fff;
+        --shadow-light: rgba(0, 0, 0, 0.1);
+        --shadow-dark: rgba(0, 0, 0, 0.2);
+    }
+
+    * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    .progress-bar-container {
+    margin: 10px 0;
+}
+
+.progress-bar {
+    height: 10px;
+    background: #e9ecef;
+    border-radius: 5px;
+    overflow: hidden;
+}
+
+.progress {
+    height: 100%;
+    background: var(--primary);
+    border-radius: 5px;
+    transition: width 0.3s ease;
+}
+
+.word-limit-warning {
+    color: var(--danger);
+    font-weight: bold;
+    padding: 10px;
+    background: rgba(244, 67, 54, 0.1);
+    border-radius: 5px;
+    margin-top: 10px;
+    display: none;
+}
+    .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 15px;
+    }
+
+    .neu-card {
+        background: var(--card-bg);
+        border-radius: 15px;
+        box-shadow: 5px 5px 15px var(--shadow-light), -5px -5px 15px rgba(255, 255, 255, 0.8);
+        padding: 25px;
+        margin-bottom: 25px;
+        transition: all 0.3s ease;
+    }
+
+    .neu-card:hover {
+        box-shadow: 8px 8px 20px var(--shadow-light), -8px -8px 20px rgba(255, 255, 255, 0.8);
+    }
+
+    .neu-btn {
+        border: none;
+        padding: 10px 20px;
+        border-radius: 10px;
+        background: var(--card-bg);
+        box-shadow: 3px 3px 8px var(--shadow-light), -3px -3px 8px rgba(255, 255, 255, 0.8);
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        font-weight: 500;
+        margin-right: 10px;
+        margin-bottom: 10px;
+    }
+    .edit-options-container {
+    margin-top: 15px; 
+    padding: 15px; 
+    background: rgba(0,0,0,0.03); 
+    border-radius: 18px;
+    display: none;
+}
+
+.edit-options-container.show-options {
+    display: block;
+}
+
+.edit-linear-scale-fields {
+    margin-top: 15px;
+    padding: 15px;
+    background: rgba(0,0,0,0.03);
+    border-radius: 10px;
+    display: none;
+}
+
+.edit-linear-scale-fields.show-linear-scale {
+    display: block;
+}
+
+    .neu-btn:hover {
+        box-shadow: 2px 2px 5px var(--shadow-light), -2px -2px 5px rgba(255, 255, 255, 0.8);
+    }
+
+    .neu-btn:active {
+        box-shadow: inset 3px 3px 8px var(--shadow-light), inset -3px -3px 8px rgba(255, 255, 255, 0.8);
+    }
+
+    .neu-btn-primary {
+        background: var(--primary);
+        color: white;
+        box-shadow: 3px 3px 8px rgba(67, 97, 238, 0.3), -3px -3px 8px rgba(255, 255, 255, 0.8);
+    }
+
+    .neu-btn-success {
+        background: var(--success);
+        color: white;
+        box-shadow: 3px 3px 8px rgba(40, 167, 69, 0.3), -3px -3px 8px rgba(255, 255, 255, 0.8);
+    }
+
+    .neu-btn-danger {
+        background: var(--danger);
+        color: white;
+        box-shadow: 3px 3px 8px rgba(220, 53, 69, 0.3), -3px -3px 8px rgba(255, 255, 255, 0.8);
+    }
+
+    .neu-btn-secondary {
+        background: var(--secondary);
+        color: white;
+        box-shadow: 3px 3px 8px rgba(108, 117, 125, 0.3), -3px -3px 8px rgba(255, 255, 255, 0.8);
+    }
+
+    .neu-input {
+        width: 100%;
+        padding: 12px 15px;
+        border: none;
+        border-radius: 10px;
+        background: var(--card-bg);
+        box-shadow: inset 3px 3px 8px var(--shadow-light), inset -3px -3px 8px rgba(255, 255, 255, 0.8);
+        margin-bottom: 15px;
+        font-size: 16px;
+    }
+
+    .page-title {
+        color: var(--primary);
+        margin-bottom: 15px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    h2, h3 {
+        color: var(--dark);
+        margin-bottom: 20px;
+    }
+
+    .word-count-info {
+        background: rgba(76, 175, 80, 0.1);
+        padding: 15px;
+        border-radius: 10px;
+        margin-bottom: 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .word-count-display {
+        font-weight: bold;
+        font-size: 18px;
+        color: var(--primary);
+    }
+    
+    .word-limit-warning {
+        color: var(--danger);
+        font-weight: bold;
+        padding: 10px;
+        background: rgba(244, 67, 54, 0.1);
+        border-radius: 5px;
+    }
+    
+    .question-word-count {
+        font-size: 12px;
+        color: #666;
+        margin-top: 5px;
+    }
+
+    .form-group {
+        margin-bottom: 20px;
+    }
+
+    .form-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 20px;
+    }
+
+    .question-item {
+        margin-bottom: 20px;
+        padding: 20px;
+    }
+
+    .options-container {
+        margin-top: 15px;
+        padding: 15px;
+        background: rgba(0, 0, 0, 0.03);
+        border-radius: 10px;
+    }
+
+    .add-option {
+        margin-top: 10px;
+    }
+
+    .progress-bar {
+        height: 10px;
+        background: #e9ecef;
+        border-radius: 5px;
+        margin-top: 5px;
+        overflow: hidden;
+    }
+    
+    .progress {
+        height: 100%;
+        background: var(--primary);
+        border-radius: 5px;
+        transition: width 0.3s ease;
+    }
+    
+    .option-input-group {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 8px;
+    }
+    
+    .option-input-group input {
+        flex: 1;
+    }
+    
+    .option-input-group button {
+        flex-shrink: 0;
+    }
+
+    @media (max-width: 768px) {
+        .neu-card {
+            padding: 15px;
+        }
+        
+        .form-actions {
+            flex-direction: column;
+        }
+    }    
+        .question-view-mode, .question-edit-mode {
+    transition: all 0.3s ease;
+}
+
+.option-input-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 8px;
+}
+
+.option-input-group input {
+    flex: 1;
+}
+
+.edit-question-form {
+    padding: 15px;
+    background: rgba(0,0,0,0.02);
+    border-radius: 10px;
+    border: 1px solid #e0e0e0;
+}
+
+.option-validation-message {
+    background: rgba(220, 53, 69, 0.1);
+    padding: 8px 12px;
+    border-radius: 5px;
+    border-left: 4px solid var(--danger);
+}
+
+/* Smooth transitions */
+.question-item {
+    transition: all 0.3s ease;
+}
+
+.question-item.editing {
+    box-shadow: 0 5px 15px rgba(67, 97, 238, 0.2);
+    border: 1px solid var(--primary);
+}
+
+.linear-scale {
+    margin: 15px 0;
+}
+
+.linear-scale-labels {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 10px;
+    font-size: 0.9em;
+    color: #666;
+}
+
+.linear-scale-options {
+    display: flex;
+    justify-content: space-between;
+    gap: 5px;
+}
+
+.linear-scale-option {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex: 1;
+}
+
+.linear-scale-option input[type="radio"] {
+    margin-bottom: 5px;
+}
+
+.linear-scale-option span {
+    font-size: 0.8em;
+    color: #666;
+}
+</style>
+
+<script>
+    // ---- CONSTANTS FROM SERVER ----
+    const wordLimit = Number("{{ word_limit }}");
+    const currentPlanName = "{{ plan_name }}";
+    const initialTotalWords = Number("{{ total_word_count }}");
+    
+    // Update the displayed plan info
+    const planNameElement = document.getElementById('plan-name-display');
+    if (planNameElement) {
+        planNameElement.textContent = currentPlanName;
+    }
+    
+    const wordLimitElement = document.getElementById('word-limit-display');
+    if (wordLimitElement) {
+        wordLimitElement.textContent = wordLimit;
+    }
+
+    // ---- INITIALIZE TOTAL WORDS ----
+    let totalWords = initialTotalWords;
+
+    // Store questions and options
+    let questions = [];
+
+    // DOM elements
+    const questionsContainer = document.getElementById('questions-container');
+    const existingQuestionsList = document.getElementById('existing-questions-list');
+    const totalWordCountElement = document.getElementById('total-word-count');
+    const wordProgressElement = document.getElementById('word-progress');
+    const wordLimitWarning = document.getElementById('word-limit-warning');
+    const publishBtn = document.getElementById('publish-btn');
+    const submitBtn = document.getElementById('submit-questions');
+
+    // Function to count words in text
+    function countWords(text) {
+        if (!text || !text.trim()) return 0;
+        return text.trim().split(/\s+/).length;
+    }
+
+    function updateTotalWordCount() {
+    // Start with words already saved in DB (only question text)
+    let liveTotal = initialTotalWords;
+
+    // Add unsaved questions (only text, no options)
+    const newQuestionElements = questionsContainer.querySelectorAll('.question-item');
+    newQuestionElements.forEach(qElement => {
+        const text = qElement.querySelector('.question-text-input')?.value || "";
+        liveTotal += countWords(text);
+    });
+
+    // Update global tracker + UI
+    totalWords = liveTotal;
+    totalWordCountElement.textContent = totalWords;
+
+    // Update progress bar
+    const progressPercent = Math.min(100, (totalWords / wordLimit) * 100);
+    wordProgressElement.style.width = `${progressPercent}%`;
+
+    // Change progress bar color
+    if (progressPercent > 90) {
+        wordProgressElement.style.background = 'var(--danger)';
+    } else if (progressPercent > 75) {
+        wordProgressElement.style.background = 'var(--warning)';
+    } else {
+        wordProgressElement.style.background = 'var(--primary)';
+    }
+
+    // Show/hide warning
+    if (totalWords > wordLimit) {
+        wordLimitWarning.style.display = 'block';
+        if (publishBtn) {
+            publishBtn.disabled = true;
+            publishBtn.title = 'Word limit exceeded. Cannot publish.';
+        }
+    } else {
+        wordLimitWarning.style.display = 'none';
+        if (publishBtn) {
+            publishBtn.disabled = false;
+            publishBtn.title = '';
+        }
+    }
+
+    // Enable/disable save button
+    if (submitBtn) {
+        submitBtn.disabled = totalWords > wordLimit;
+        submitBtn.title = totalWords > wordLimit ? 'Word limit exceeded. Reduce content to save.' : '';
+    }
+}
+
+
+
+    // Function to create a new question block
+    function createQuestionBlock() {
+        const questionId = Date.now(); // Unique ID for the question
+        const qDiv = document.createElement("div");
+        qDiv.className = "neu-card question-item";
+        qDiv.dataset.id = questionId;
+        qDiv.style.marginBottom = "15px";
+        qDiv.innerHTML = `
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <label><strong>New Question</strong></label>
+                <button type="button" class="neu-btn neu-btn-danger delete-question">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
+            <div class="form-group">
+                <input type="text" name="question_text" class="neu-input question-text-input" placeholder="Enter your question" required>
+                <div class="question-word-count">
+                    <span class="question-word-count-value">0</span> words in this question
+                </div>
+            </div>
+            <div class="form-group">
+                <select name="question_type" class="neu-input question-type">
+                    <option value="short">Short answer</option>
+                    <option value="paragraph">Paragraph</option>
+                    <option value="multiple_choice">Multiple choice</option>
+                    <option value="checkbox">Checkboxes</option>
+                    <option value="dropdown">Dropdown</option>
+                    <option value="linear_scale">Linear Scale</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>
+                    <input type="checkbox" name="question_required" value="true"> Required
+                </label>
+            </div>
+            <div class="options-container" style="display:none; margin-top:10px;">
+                <div class="options-list"></div>
+                <button type="button" class="add-option neu-btn neu-btn-secondary">
+                    <i class="fas fa-plus"></i> Add Option
+                </button>
+            </div>
+        `;
+        questionsContainer.appendChild(qDiv);
+
+        // Add event listeners
+        const typeSelect = qDiv.querySelector(".question-type");
+        const optionsContainer = qDiv.querySelector(".options-container");
+        const questionInput = qDiv.querySelector(".question-text-input");
+        const questionWordCount = qDiv.querySelector(".question-word-count-value");
+        const deleteBtn = qDiv.querySelector(".delete-question");
+        const addOptionBtn = qDiv.querySelector(".add-option");
+        const optionsList = qDiv.querySelector(".options-list");
+
+        // Update word count when question text changes
+        questionInput.addEventListener("input", function() {
+            const words = countWords(this.value);
+            questionWordCount.textContent = words;
+            updateTotalWordCount();
+        });
+
+        // Show options only for MCQ, checkbox, dropdown
+        typeSelect.addEventListener("change", () => {
+            const optionsContainer = qDiv.querySelector(".options-container");
+            const linearScaleContainer = qDiv.querySelector(".linear-scale-fields");
+            
+            // Hide all containers first
+            optionsContainer.style.display = "none";
+            linearScaleContainer.style.display = "none";
+            
+            // Show relevant container
+            if (["multiple_choice","checkbox","dropdown"].includes(typeSelect.value)) {
+                optionsContainer.style.display = "block";
+            } else if (typeSelect.value === "linear_scale") {
+                linearScaleContainer.style.display = "block";
+            }
+        });
+
+        // Add option dynamically - FIXED VERSION
+addOptionBtn.addEventListener("click", () => {
+    const optionDiv = document.createElement("div");
+    optionDiv.className = "option-input-group";
+    optionDiv.innerHTML = `
+        <input type="text" class="neu-input option-text-input" placeholder="Option text">
+        <button type="button" class="neu-btn neu-btn-danger delete-option">
+            <i class="fas fa-trash"></i>
+        </button>
+    `;
+    optionsList.appendChild(optionDiv);
+    
+    // Add event listener to option text input
+    const optionInput = optionDiv.querySelector(".option-text-input");
+    optionInput.addEventListener("input", updateTotalWordCount);
+    
+    // Add event listener to delete option button
+    optionDiv.querySelector(".delete-option").addEventListener("click", () => {
+        optionsList.removeChild(optionDiv);
+        updateTotalWordCount();
+    });
+});
+
+        // Delete question
+        deleteBtn.addEventListener("click", () => {
+            questionsContainer.removeChild(qDiv);
+            // Remove from questions array
+            questions = questions.filter(q => q.id !== questionId);
+            updateTotalWordCount();
+        });
+
+        // Return the question element
+        return qDiv;
+    }
+
+    // Function to render existing questions
+    function renderExistingQuestions() {
+        if (questions.length === 0) {
+            return;
+        }
+        
+        const existingQuestionsContainer = document.getElementById('existing-questions-list');
+        existingQuestionsContainer.innerHTML = '';
+        
+        questions.forEach(q => {
+            const questionItem = document.createElement("div");
+            questionItem.className = "neu-card question-item";
+            questionItem.style.marginBottom = "15px";
+            questionItem.style.padding = "15px";
+            
+            let optionsHtml = '';
+            if (q.options && q.options.length > 0) {
+                optionsHtml = '<ul style="margin-top:5px; padding-left: 20px;">';
+                q.options.forEach(opt => {
+                    optionsHtml += `<li>${opt.text}</li>`;
+                });
+                optionsHtml += '</ul>';
+            }
+            
+            questionItem.innerHTML = `
+                <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                    <div>
+                        <strong>${q.text}</strong> (${q.type}) - ${q.wordCount} words
+                        ${optionsHtml}
+                    </div>
+                    <div>
+                        <button type="button" class="neu-btn neu-btn-danger delete-existing-question" data-id="${q.id}">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            existingQuestionsContainer.appendChild(questionItem);
+            
+            // Add event listener to delete button
+            questionItem.querySelector(".delete-existing-question").addEventListener("click", () => {
+                questions = questions.filter(question => question.id !== q.id);
+                renderExistingQuestions();
+                updateTotalWordCount();
+            });
+        });
+    }
+
+    // Add new question
+    document.getElementById("add-question").addEventListener("click", () => {
+        createQuestionBlock();
+    });
+
+    // Replace the form submission handler with this fixed version:
+document.getElementById("question-form").addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    // Collect unsaved questions
+    const questionElements = questionsContainer.querySelectorAll('.question-item');
+    const formData = new FormData();
+
+    // In the form submission handler, add linear scale data collection
+questionElements.forEach((qElement, index) => {
+    const text = qElement.querySelector('.question-text-input').value;
+    const type = qElement.querySelector('.question-type').value;
+
+    formData.append('question_text[]', text);
+    formData.append('question_type[]', type);
+
+    // Handle options for multiple choice types
+    if (["multiple_choice","checkbox","dropdown"].includes(type)) {
+        const optionInputs = qElement.querySelectorAll('.option-text-input');
+        optionInputs.forEach(optInput => {
+            if (optInput.value.trim()) {
+                formData.append(`options[${index}][]`, optInput.value.trim());
+            }
+        });
+    }
+    
+    // Handle linear scale data
+    if (type === "linear_scale") {
+        const lowValue = qElement.querySelector('.linear-scale-low').value;
+        const highValue = qElement.querySelector('.linear-scale-high').value;
+        const lowLabel = qElement.querySelector('.linear-scale-low-label').value;
+        const highLabel = qElement.querySelector('.linear-scale-high-label').value;
+        
+        formData.append('linear_scale_low[]', lowValue);
+        formData.append('linear_scale_high[]', highValue);
+        formData.append('linear_scale_low_label[]', lowLabel);
+        formData.append('linear_scale_high_label[]', highLabel);
+    }
+});
+        
+
+    // Send data to server
+    try {
+        const response = await fetch("", {
+            method: "POST",
+            body: formData
+        });
+
+        if (response.ok) {
+            location.reload();
+        } else {
+            alert('Error saving questions');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Error saving questions');
+    }
+});
+
+// Edit Question Functionality
+document.addEventListener('DOMContentLoaded', function() {
+    // Edit button click handler
+    document.addEventListener('click', function(e) {
+        if (e.target.closest('.edit-question-btn')) {
+            const questionItem = e.target.closest('.question-item');
+            toggleEditMode(questionItem, true);
+        }
+        
+        // Cancel edit button
+        if (e.target.closest('.cancel-edit-btn')) {
+            const questionItem = e.target.closest('.question-item');
+            toggleEditMode(questionItem, false);
+        }
+        
+        // Add option in edit mode
+        if (e.target.closest('.add-edit-option')) {
+            const optionsList = e.target.closest('.edit-options-container').querySelector('.edit-options-list');
+            addOptionToEditForm(optionsList);
+        }
+        
+        // Remove option in edit mode
+        if (e.target.closest('.remove-option')) {
+            const optionGroup = e.target.closest('.option-input-group');
+            optionGroup.remove();
+            updateTotalWordCount();
+            validateOptions(optionGroup.closest('.edit-options-container'));
+        }
+    });
+    
+// Question type change in edit mode
+document.addEventListener('change', function(e) {
+    if (e.target.classList.contains('edit-question-type')) {
+        const editMode = e.target.closest('.question-edit-mode');
+        const optionsContainer = editMode.querySelector('.edit-options-container');
+        const linearScaleContainer = editMode.querySelector('.edit-linear-scale-fields');
+        
+        // Hide all containers first
+        if (optionsContainer) optionsContainer.style.display = 'none';
+        if (linearScaleContainer) linearScaleContainer.style.display = 'none';
+        
+        // Show relevant container
+        const selectedType = e.target.value;
+        if (['multiple_choice', 'checkbox', 'dropdown'].includes(selectedType)) {
+            if (optionsContainer) optionsContainer.style.display = 'block';
+            optionsContainer.classList.add('show-options');
+            
+            // Ensure at least one option exists
+            const optionsList = optionsContainer.querySelector('.edit-options-list');
+            if (optionsList.children.length === 0) {
+                addOptionToEditForm(optionsList);
+            }
+            
+            validateOptions(optionsContainer);
+        } else if (selectedType === 'linear_scale') {
+            if (linearScaleContainer) linearScaleContainer.style.display = 'block';
+            linearScaleContainer.classList.add('show-linear-scale');
+        } else {
+            // For other question types, hide validation message
+            const validationMessage = editMode.querySelector('.option-validation-message');
+            if (validationMessage) validationMessage.style.display = 'none';
+        }
+    }
+    
+    // Update word count when editing question text
+    if (e.target.classList.contains('edit-question-text')) {
+        const words = countWords(e.target.value);
+        const wordCountElement = e.target.closest('.form-group').querySelector('.edit-question-word-count');
+        wordCountElement.textContent = words;
+        updateTotalWordCount();
+    }
+    
+    // Update word count when editing option text
+    if (e.target.classList.contains('edit-option-text')) {
+        updateTotalWordCount();
+    }
+});
+    
+    // Form submission validation for edit forms
+    document.addEventListener('submit', function(e) {
+        if (e.target.classList.contains('edit-question-form')) {
+            const questionType = e.target.querySelector('.edit-question-type').value;
+            const optionsContainer = e.target.querySelector('.edit-options-container');
+            
+            if (["multiple_choice", "checkbox", "dropdown"].includes(questionType)) {
+                const options = optionsContainer.querySelectorAll('.edit-option-text');
+                const hasValidOptions = Array.from(options).some(opt => opt.value.trim() !== '');
+                
+                if (!hasValidOptions) {
+                    e.preventDefault();
+                    validateOptions(optionsContainer);
+                    alert('Multiple choice, checkbox, and dropdown questions must have at least one option.');
+                    return false;
+                }
+            }
+            
+            // Update total word count before submitting
+            updateTotalWordCount();
+        }
+    });
+    
+    // Initialize word count on page load
+    updateTotalWordCount();
+});
+
+// Toggle between view and edit mode
+function toggleEditMode(questionItem, showEdit) {
+    const viewMode = questionItem.querySelector('.question-view-mode');
+    const editMode = questionItem.querySelector('.question-edit-mode');
+    
+    if (showEdit) {
+        viewMode.style.display = 'none';
+        editMode.style.display = 'block';
+        
+        // Initialize word count for the edit form
+        const questionInput = editMode.querySelector('.edit-question-text');
+        const words = countWords(questionInput.value);
+        editMode.querySelector('.edit-question-word-count').textContent = words;
+        
+        // Update total word count
+        updateTotalWordCount();
+        
+        // Validate options if needed
+        const questionType = editMode.querySelector('.edit-question-type').value;
+        if (["multiple_choice", "checkbox", "dropdown"].includes(questionType)) {
+            const optionsContainer = editMode.querySelector('.edit-options-container');
+            validateOptions(optionsContainer);
+        }
+    } else {
+        viewMode.style.display = 'block';
+        editMode.style.display = 'none';
+    }
+}
+
+// Add option to edit form
+function addOptionToEditForm(optionsList) {
+    const optionDiv = document.createElement('div');
+    optionDiv.className = 'option-input-group';
+    optionDiv.style.display = 'flex';
+    optionDiv.style.alignItems = 'center';
+    optionDiv.style.gap = '10px';
+    optionDiv.style.marginBottom = '8px';
+    
+    optionDiv.innerHTML = `
+        <input type="text" class="neu-input edit-option-text" name="options[]" placeholder="Option text" required>
+        <button type="button" class="neu-btn neu-btn-danger remove-option">
+            <i class="fas fa-trash"></i>
+        </button>
+    `;
+    
+    optionsList.appendChild(optionDiv);
+    
+    // Add event listener to the new option input
+    const optionInput = optionDiv.querySelector('.edit-option-text');
+    optionInput.addEventListener('input', updateTotalWordCount);
+    
+    // Validate options after adding
+    const optionsContainer = optionsList.closest('.edit-options-container');
+    validateOptions(optionsContainer);
+}
+
+// Validate options for multiple choice questions
+function validateOptions(optionsContainer) {
+    const options = optionsContainer.querySelectorAll('.edit-option-text');
+    const hasValidOptions = Array.from(options).some(opt => opt.value.trim() !== '');
+    const validationMessage = optionsContainer.querySelector('.option-validation-message');
+    
+    if (!hasValidOptions && options.length > 0) {
+        validationMessage.style.display = 'block';
+        return false;
+    } else {
+        validationMessage.style.display = 'none';
+        return true;
+    }
+}
+
+// Enhanced word count function that includes both new and edited questions
+function updateTotalWordCount() {
+    let liveTotal = 0;
+
+    // 1. Count words from existing questions that are NOT being edited
+    const existingQuestionItems = document.querySelectorAll('#existing-questions-list .question-item');
+    existingQuestionItems.forEach(item => {
+        const viewMode = item.querySelector('.question-view-mode');
+        const editMode = item.querySelector('.question-edit-mode');
+        
+        // If question is in view mode (not being edited), use stored word count
+        if (viewMode.style.display !== 'none') {
+            const questionId = item.dataset.questionId;
+            const originalWordCount = parseInt(item.querySelector('.edit-question-word-count')?.textContent || '0');
+            liveTotal += originalWordCount;
+        }
+        // If question is being edited, count the current text
+        else if (editMode.style.display !== 'none') {
+            const editInput = editMode.querySelector('.edit-question-text');
+            const text = editInput ? editInput.value : '';
+            liveTotal += countWords(text);
+        }
+    });
+
+    // 2. Add words from new unsaved questions
+    const newQuestionElements = questionsContainer.querySelectorAll('.question-item');
+    newQuestionElements.forEach(qElement => {
+        const text = qElement.querySelector('.question-text-input')?.value || "";
+        liveTotal += countWords(text);
+    });
+
+    // Update global tracker + UI
+    totalWords = liveTotal;
+    totalWordCountElement.textContent = totalWords;
+
+    // Update progress bar
+    const progressPercent = Math.min(100, (totalWords / wordLimit) * 100);
+    wordProgressElement.style.width = `${progressPercent}%`;
+
+    // Change progress bar color based on usage
+    if (progressPercent > 90) {
+        wordProgressElement.style.background = 'var(--danger)';
+    } else if (progressPercent > 75) {
+        wordProgressElement.style.background = 'var(--warning)';
+    } else {
+        wordProgressElement.style.background = 'var(--primary)';
+    }
+
+    // Show/hide warning and disable buttons if over limit
+    if (totalWords > wordLimit) {
+        wordLimitWarning.style.display = 'block';
+        if (publishBtn) {
+            publishBtn.disabled = true;
+            publishBtn.title = 'Word limit exceeded. Cannot publish.';
+        }
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.title = 'Word limit exceeded. Reduce content to save.';
+        }
+    } else {
+        wordLimitWarning.style.display = 'none';
+        if (publishBtn) {
+            publishBtn.disabled = false;
+            publishBtn.title = '';
+        }
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.title = '';
+        }
+    }
+
+    console.log('Word count update:', {
+        existing: liveTotal,
+        total: totalWords,
+        limit: wordLimit
+    });
+}
+
+// Toggle between view and edit mode
+function toggleEditMode(questionItem, showEdit) {
+    const viewMode = questionItem.querySelector('.question-view-mode');
+    const editMode = questionItem.querySelector('.question-edit-mode');
+    
+    if (showEdit) {
+        viewMode.style.display = 'none';
+        editMode.style.display = 'block';
+        
+        // Initialize word count for the edit form
+        const questionInput = editMode.querySelector('.edit-question-text');
+        const words = countWords(questionInput.value);
+        editMode.querySelector('.edit-question-word-count').textContent = words;
+        
+        // Update total word count
+        updateTotalWordCount();
+        
+        // Validate options if needed
+        const questionType = editMode.querySelector('.edit-question-type').value;
+        if (["multiple_choice", "checkbox", "dropdown"].includes(questionType)) {
+            const optionsContainer = editMode.querySelector('.edit-options-container');
+            validateOptions(optionsContainer);
+        }
+    } else {
+        viewMode.style.display = 'block';
+        editMode.style.display = 'none';
+        
+        // Update total word count when canceling edit
+        updateTotalWordCount();
+    }
+}
+
+// Add option to edit form
+function addOptionToEditForm(optionsList) {
+    const optionDiv = document.createElement('div');
+    optionDiv.className = 'option-input-group';
+    optionDiv.style.display = 'flex';
+    optionDiv.style.alignItems = 'center';
+    optionDiv.style.gap = '10px';
+    optionDiv.style.marginBottom = '8px';
+    
+    optionDiv.innerHTML = `
+        <input type="text" class="neu-input edit-option-text" name="options[]" placeholder="Option text" required>
+        <button type="button" class="neu-btn neu-btn-danger remove-option">
+            <i class="fas fa-trash"></i>
+        </button>
+    `;
+    
+    optionsList.appendChild(optionDiv);
+    
+    const optionInput = optionDiv.querySelector('.edit-option-text');
+    optionInput.addEventListener('input', updateTotalWordCount);
+    
+    const optionsContainer = optionsList.closest('.edit-options-container');
+    validateOptions(optionsContainer);
+}
+
+// Validate options for multiple choice questions
+function validateOptions(optionsContainer) {
+    const options = optionsContainer.querySelectorAll('.edit-option-text');
+    const hasValidOptions = Array.from(options).some(opt => opt.value.trim() !== '');
+    const validationMessage = optionsContainer.querySelector('.option-validation-message');
+    
+    if (!hasValidOptions && options.length > 0) {
+        validationMessage.style.display = 'block';
+        return false;
+    } else {
+        validationMessage.style.display = 'none';
+        return true;
+    }
+}
+
+// Enhanced logo upload with drag & drop
+document.addEventListener('DOMContentLoaded', function() {
+    const logoInput = document.getElementById('logo');
+    const logoUploadArea = document.querySelector('.logo-upload-area');
+    
+    if (logoUploadArea && logoInput) {
+        // Click to upload
+        logoUploadArea.addEventListener('click', function() {
+            logoInput.click();
+        });
+        
+        // Drag & drop functionality
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            logoUploadArea.addEventListener(eventName, preventDefaults, false);
+        });
+        
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+        
+        ['dragenter', 'dragover'].forEach(eventName => {
+            logoUploadArea.addEventListener(eventName, highlight, false);
+        });
+        
+        ['dragleave', 'drop'].forEach(eventName => {
+            logoUploadArea.addEventListener(eventName, unhighlight, false);
+        });
+        
+        function highlight() {
+            logoUploadArea.classList.add('dragover');
+        }
+        
+        function unhighlight() {
+            logoUploadArea.classList.remove('dragover');
+        }
+        
+        logoUploadArea.addEventListener('drop', handleDrop, false);
+        
+        function handleDrop(e) {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            logoInput.files = files;
+            
+            // Trigger change event
+            const event = new Event('change', { bubbles: true });
+            logoInput.dispatchEvent(event);
+        }
+        
+        // Preview selected file
+        logoInput.addEventListener('change', function() {
+            if (this.files && this.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    // You could add a preview here if needed
+                    console.log('File selected:', this.files[0].name);
+                };
+                reader.readAsDataURL(this.files[0]);
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

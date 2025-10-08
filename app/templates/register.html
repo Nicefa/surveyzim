@@ -1,0 +1,48 @@
+{% extends "layout.html" %}
+
+{% block title %}Register - SurveyZim{% endblock %}
+
+{% block content %}
+<div class="form-container">
+    <div class="neu-card">
+        <h2 class="page-title">
+            <i class="fas fa-user-plus"></i> Create an Account
+        </h2>
+        
+        <form method="POST">
+            {{ form.hidden_tag() }}
+            
+            <div class="form-group">
+                {{ form.username.label }}
+                {{ form.username(class="neu-input", placeholder="Enter your username") }}
+            </div>
+            
+            <div class="form-group">
+                {{ form.email.label }}
+                {{ form.email(class="neu-input", placeholder="Enter your email") }}
+            </div>
+            
+            <div class="form-group">
+                {{ form.password.label }}
+                {{ form.password(class="neu-input", placeholder="Enter your password") }}
+            </div>
+            
+            <div class="form-group">
+                {{ form.confirm_password.label }}
+                {{ form.confirm_password(class="neu-input", placeholder="Confirm your password") }}
+            </div>
+            
+            <div class="form-actions">
+                <a href="{{ url_for('main.login') }}" class="neu-btn">
+                    <i class="fas fa-arrow-left"></i> Back to Login
+                </a>
+                {{ form.submit(class="neu-btn neu-btn-primary") }}
+            </div>
+        </form>
+        
+        <p style="text-align: center; margin-top: 20px;">
+            Already have an account? <a href="{{ url_for('main.login') }}">Login here</a>
+        </p>
+    </div>
+</div>
+{% endblock %}

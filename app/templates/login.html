@@ -1,0 +1,54 @@
+{% extends "layout.html" %}
+
+{% block title %}Login - SurveyZim{% endblock %}
+
+{% block content %}
+<div class="form-container">
+    <div class="neu-card">
+        <h2 class="page-title">
+            <i class="fas fa-sign-in-alt"></i> Login
+        </h2>
+
+        {# Display validation errors #}
+        {% if form.errors %}
+            <div class="form-errors" style="color: red; margin-bottom: 15px;">
+                <ul>
+                {% for field, errors in form.errors.items() %}
+                    {% for error in errors %}
+                        <li>{{ error }}</li>
+                    {% endfor %}
+                {% endfor %}
+                </ul>
+            </div>
+        {% endif %}
+
+        <form method="POST">
+            {{ form.hidden_tag() }}
+            
+            <div class="form-group">
+                {{ form.email.label }}
+                {{ form.email(class="neu-input", placeholder="Enter your email") }}
+            </div>
+            
+            <div class="form-group">
+                {{ form.password.label }}
+                {{ form.password(class="neu-input", placeholder="Enter your password") }}
+            </div>
+            
+            <p style="text-align: right; margin-top: 5px;">
+            <a href="{{ url_for('main.forgot_password') }}">Forgot Password?</a>
+           </p>
+            <div class="form-actions" style="display: flex; justify-content: space-between; margin-top: 10px;">
+                <a href="{{ url_for('main.register') }}" class="neu-btn">
+                    <i class="fas fa-user-plus"></i> Register
+                </a>
+                {{ form.submit(class="neu-btn neu-btn-primary") }}
+            </div>
+        </form>
+        
+        <p style="text-align: center; margin-top: 20px;">
+            Don't have an account? <a href="{{ url_for('main.register') }}">Register here</a>
+        </p>
+    </div>
+</div>
+{% endblock %}

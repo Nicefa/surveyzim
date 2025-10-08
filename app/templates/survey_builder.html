@@ -1,0 +1,457 @@
+{% extends "layout.html" %}
+
+{% block title %}Create Survey - SurveyZim{% endblock %}
+
+{% block content %}
+
+<div id="survey-builder">
+    <div class="neu-card">
+        <h2 class="page-title">
+            <i class="fas fa-plus"></i> Create New Survey
+        </h2>
+
+        <!-- Word Count Information -->
+        <div class="word-count-info">
+    <i class="fas fa-info-circle"></i>
+    {% if selected_package %}
+        Your current plan: <strong>{{ selected_package|capitalize }}</strong>
+        (Max {{ package_word_limit }} words)
+    {% else %}
+        Your current plan: <strong>{{ current_user.payment_status|capitalize if current_user.payment_status != 'unpaid' else 'Unpaid' }}</strong>
+        {% if current_user.payment_status != 'unpaid' %}
+            (Max {{ current_user.word_limit }} words)
+        {% else %}
+            (Purchase a plan to publish surveys)
+        {% endif %}
+    {% endif %}
+    <div class="word-count-display">
+        <span id="total-word-count">0</span> / 
+        <span id="word-limit">{{ package_word_limit if selected_package else (current_user.word_limit if current_user.payment_status != 'unpaid' else '∞') }}</span> words
+    </div>
+</div>
+
+<!-- Hidden fields to pass plan info on submission -->
+<input type="hidden" name="package" id="package" value="{{ request.args.get('package', '') }}">
+<input type="hidden" name="word_limit" id="word_limit" value="{{ request.args.get('word_limit', '') }}">
+           
+            <!-- Debug information (can be removed in production) -->
+            <div id="debug-info" style="display: none; font-size: 12px; color: #666; margin-top: 10px;">
+                <div>Title words: <span id="debug-title">0</span></div>
+                <div>Description words: <span id="debug-desc">0</span></div>
+                <div>Question words: <span id="debug-questions">0</span></div>
+                <div>Total words: <span id="debug-total">0</span></div>
+            </div>
+        </div>
+
+        <form method="POST" id="survey-form" enctype="multipart/form-data">
+            {{ form.hidden_tag() }}
+
+            <!-- Survey Title -->
+<div class="form-group">
+    {{ form.title.label }}
+    {{ form.title(class="neu-input", placeholder="Enter survey title", id="survey-title") }}
+    <div class="character-count" style="display:none;">
+        <span id="title-word-count">0</span> words in title
+    </div>
+</div>
+
+<!-- Survey Description -->
+<div class="form-group">
+    {{ form.description.label }}
+    {{ form.description(class="neu-input", placeholder="Enter survey description", rows="4", id="survey-description") }}
+    <div class="character-count" style="display:none;">
+        <span id="description-word-count">0</span> words in description
+    </div>
+</div>
+
+<!-- Add this after the description field -->
+<div class="form-group">
+    {{ form.logo.label }}
+    {{ form.logo(class="neu-input") }}
+    <small style="color: #666; display: block; margin-top: 5px;">
+        Upload a logo for your survey (JPG, PNG, GIF)
+    </small>
+</div>
+
+            <!-- Questions Container -->
+            <div id="questions-container"></div>
+
+            <!-- Add Question Button -->
+            <div class="form-actions" style="margin-top: 20px;">
+                <button type="button" id="add-question" class="neu-btn neu-btn-primary">
+                    <i class="fas fa-plus"></i> Add Question
+                </button>
+            </div>
+
+            <!-- Submit & Cancel -->
+            <div class="form-actions" style="margin-top: 30px;">
+                <a href="{{ url_for('main.dashboard') }}" class="neu-btn">
+                    <i class="fas fa-arrow-left"></i> Cancel
+                </a>
+                <button type="submit" class="neu-btn neu-btn-primary" id="submit-btn">
+                    <i class="fas fa-save"></i> Create Survey
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Store server-side data for JavaScript -->
+<div id="server-data" 
+     data-word-limit="{{ current_user.word_limit if current_user.payment_status != 'unpaid' else 999999 }}"
+     data-has-paid-plan="{{ 'true' if current_user.payment_status != 'unpaid' else 'false' }}"
+     style="display: none;">
+</div>
+
+<!-- Linear Scale Options -->
+<div class="linear-scale-options" style="display: none;">
+    <div class="form-group">
+        <label>Scale Range</label>
+        <div class="row">
+            <div class="col">
+                <input type="number" class="form-control linear-scale-low" name="linear_scale_low[]" value="1" min="1" max="10">
+            </div>
+            <div class="col">
+                <input type="number" class="form-control linear-scale-high" name="linear_scale_high[]" value="5" min="2" max="10">
+            </div>
+        </div>
+    </div>
+    <div class="form-group">
+        <label>Labels (optional)</label>
+        <div class="row">
+            <div class="col">
+                <input type="text" class="form-control linear-scale-low-label" name="linear_scale_low_label[]" placeholder="Low label (e.g., Strongly disagree)">
+            </div>
+            <div class="col">
+                <input type="text" class="form-control linear-scale-high-label" name="linear_scale_high_label[]" placeholder="High label (e.g., Strongly agree)">
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* CSS styles remain the same as before */
+    #survey-builder {
+        max-width: 900px;
+        margin: 40px auto;
+        display: flex;
+        flex-direction: column;
+        gap: 25px;
+    }
+
+    .word-count-info {
+        background: rgba(76, 175, 80, 0.1);
+        padding: 15px;
+        border-radius: 10px;
+        margin-bottom: 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .word-count-display {
+        font-weight: bold;
+        font-size: 18px;
+        color: var(--primary);
+    }
+    
+    .word-limit-info {
+        color: var(--danger);
+        font-weight: bold;
+        padding: 10px;
+        background: rgba(244, 67, 54, 0.1);
+        border-radius: 5px;
+    }
+    
+    .character-count {
+        font-size: 14px;
+        color: #666;
+        margin-top: 5px;
+    }
+
+    .question-item {
+        background: #fff;
+        border-radius: 10px;
+        box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+        padding: 20px 25px;
+        transition: box-shadow 0.2s;
+        margin-bottom: 20px;
+    }
+
+    .question-item:hover {
+        box-shadow: 0 5px 15px rgba(0,0,0,0.15);
+    }
+    .form-group {
+        margin-bottom: 20px;
+    }
+
+    .form-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 20px;
+    }
+
+    .option-list {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        margin-top: 10px;
+    }
+
+    .option-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .required-toggle {
+        margin-top: 10px;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        font-size: 14px;
+    }
+
+    .add-option {
+        margin-top: 10px;
+    }
+    
+    .question-word-count {
+        font-size: 12px;
+        color: #666;
+        margin-top: 5px;
+    }
+</style>
+
+<script>
+// Get server-side data from hidden element
+const serverData = document.getElementById('server-data');
+const userWordLimit = parseInt(serverData.dataset.wordLimit);
+const hasPaidPlan = serverData.dataset.hasPaidPlan === 'true';
+
+let questionCount = 0;
+let totalWordCount = 0;
+
+// Improved word count function
+function countWords(text) {
+    if (!text || typeof text !== 'string') return 0;
+    
+    // Remove extra whitespace and split by spaces, tabs, and newlines
+    const trimmedText = text.trim().replace(/\s+/g, ' ');
+    if (!trimmedText) return 0;
+    
+    return trimmedText.split(' ').length;
+}
+
+function updateTotalWordCount() {
+    // Count words in title and description
+    const titleWords = countWords(document.getElementById('survey-title').value);
+    const descriptionWords = countWords(document.getElementById('survey-description').value);
+    
+    // Count words in questions
+    let questionWords = 0;
+    document.querySelectorAll('.question-text-input').forEach(input => {
+        questionWords += countWords(input.value);
+    });
+
+    totalWordCount = titleWords + descriptionWords + questionWords;
+
+    // Update displays
+    document.getElementById('title-word-count').textContent = titleWords;
+    document.getElementById('description-word-count').textContent = descriptionWords;
+    document.getElementById('total-word-count').textContent = totalWordCount;
+
+    // Update debug information
+    document.getElementById('debug-title').textContent = titleWords;
+    document.getElementById('debug-desc').textContent = descriptionWords;
+    document.getElementById('debug-questions').textContent = questionWords;
+    document.getElementById('debug-total').textContent = totalWordCount;
+
+    // Update styling based on word count
+    const totalWordCountElement = document.getElementById('total-word-count');
+    const submitBtn = document.getElementById('submit-btn');
+
+    if (hasPaidPlan && totalWordCount > userWordLimit) {
+        totalWordCountElement.style.color = 'var(--danger)';
+        submitBtn.disabled = true;
+        submitBtn.title = 'Word limit exceeded. Please upgrade your plan or reduce content.';
+    } else {
+        totalWordCountElement.style.color = '';
+        submitBtn.disabled = false;
+        submitBtn.title = '';
+    }
+
+    console.log('Word count update:', {
+        title: titleWords,
+        description: descriptionWords,
+        questions: questionWords,
+        total: totalWordCount,
+        limit: userWordLimit,
+        hasPaidPlan: hasPaidPlan
+    });
+}
+
+function createQuestionBlock() {
+    questionCount++;
+    const container = document.getElementById("questions-container");
+
+    const qDiv = document.createElement("div");
+    qDiv.className = "neu-card question-item";
+    qDiv.dataset.index = questionCount;
+
+    qDiv.innerHTML = `
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+            <label><strong>Question ${questionCount}</strong></label>
+            <button type="button" class="neu-btn neu-btn-danger delete-question">
+                <i class="fas fa-trash"></i>
+            </button>
+        </div>
+        <div class="form-group">
+            <input type="text" name="question_text[]" class="neu-input question-text-input" placeholder="Enter your question" required>
+            <div class="question-word-count">
+                <span class="question-word-count-value">0</span> words in this question
+            </div>
+        </div>
+        <div class="form-group">
+            <select name="question_type[]" class="neu-input question-type">
+                <option value="short">Short answer</option>
+                <option value="paragraph">Paragraph</option>
+                <option value="multiple_choice">Multiple choice</option>
+                <option value="checkbox">Checkboxes</option>
+                <option value="dropdown">Dropdown</option>
+                <option value="linear_scale">Linear Scale</option>
+            </select>
+        </div>
+        
+        <!-- Options Container for Multiple Choice Types -->
+        <div class="options-container" style="display:none;">
+            <div class="option-list"></div>
+            <button type="button" class="add-option neu-btn neu-btn-secondary">
+                <i class="fas fa-plus"></i> Add Option
+            </button>
+        </div>
+        
+        <!-- Linear Scale Container -->
+        <div class="linear-scale-container" style="display:none; margin-top:15px; padding:15px; background:rgba(0,0,0,0.03); border-radius:10px;">
+            <div class="form-group">
+                <label>Scale Range</label>
+                <div class="row">
+                    <div class="col">
+                        <input type="number" class="neu-input linear-scale-low" name="linear_scale_low[]" value="1" min="1" max="10">
+                    </div>
+                    <div class="col">
+                        <input type="number" class="neu-input linear-scale-high" name="linear_scale_high[]" value="5" min="2" max="10">
+                    </div>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Labels (optional)</label>
+                <div class="row">
+                    <div class="col">
+                        <input type="text" class="neu-input linear-scale-low-label" name="linear_scale_low_label[]" placeholder="Low label (e.g., Strongly disagree)">
+                    </div>
+                    <div class="col">
+                        <input type="text" class="neu-input linear-scale-high-label" name="linear_scale_high_label[]" placeholder="High label (e.g., Strongly agree)">
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="required-toggle">
+            <input type="checkbox" name="required_${questionCount}"> Required
+        </div>
+    `;
+    container.appendChild(qDiv);
+
+    const typeSelect = qDiv.querySelector(".question-type");
+    const optionsContainer = qDiv.querySelector(".options-container");
+    const linearScaleContainer = qDiv.querySelector(".linear-scale-container");
+    const optionList = qDiv.querySelector(".option-list");
+    const questionInput = qDiv.querySelector(".question-text-input");
+    const questionWordCount = qDiv.querySelector(".question-word-count-value");
+
+    // Update word count when question text changes
+    questionInput.addEventListener("input", function() {
+        const words = countWords(this.value);
+        questionWordCount.textContent = words;
+        updateTotalWordCount();
+    });
+
+    // Show/hide appropriate containers based on question type
+    typeSelect.addEventListener("change", () => {
+        // Hide all containers first
+        optionsContainer.style.display = "none";
+        linearScaleContainer.style.display = "none";
+        
+        // Show relevant container
+        if (["multiple_choice","checkbox","dropdown"].includes(typeSelect.value)) {
+            optionsContainer.style.display = "block";
+        } else if (typeSelect.value === "linear_scale") {
+            linearScaleContainer.style.display = "block";
+        }
+    });
+
+    // Add option functionality
+    qDiv.querySelector(".add-option").addEventListener("click", () => {
+        const index = qDiv.dataset.index;
+        const optionCount = optionList.children.length + 1;
+
+        const optionDiv = document.createElement("div");
+        optionDiv.className = "option-item";
+
+        optionDiv.innerHTML = `
+            <input type="text" name="options[${index}][]" placeholder="Option ${optionCount}" class="neu-input" required>
+            <button type="button" class="neu-btn neu-btn-danger delete-option">
+                <i class="fas fa-trash"></i>
+            </button>
+        `;
+
+        optionList.appendChild(optionDiv);
+        
+        // Add delete functionality for the new option
+        optionDiv.querySelector(".delete-option").addEventListener("click", () => {
+            optionList.removeChild(optionDiv);
+        });
+    });
+
+    // Delete question functionality
+    qDiv.querySelector(".delete-question").addEventListener("click", () => {
+        container.removeChild(qDiv);
+        updateQuestionLabels();
+        updateTotalWordCount();
+    });
+
+    return qDiv;
+}
+
+// Update question labels after deletion
+function updateQuestionLabels() {
+    const questions = document.querySelectorAll("#questions-container .question-item");
+    questions.forEach((q, idx) => {
+        q.querySelector("label strong").textContent = `Question ${idx + 1}`;
+        q.dataset.index = idx + 1;
+    });
+    questionCount = questions.length;
+}
+
+// Add new question
+document.getElementById("add-question").addEventListener("click", createQuestionBlock);
+
+// Add event listeners to title and description inputs
+document.getElementById('survey-title').addEventListener('input', updateTotalWordCount);
+document.getElementById('survey-description').addEventListener('input', updateTotalWordCount);
+
+// Toggle debug info with Ctrl+D
+document.addEventListener('keydown', function(e) {
+    if (e.ctrlKey && e.key === 'd') {
+        e.preventDefault();
+        const debugInfo = document.getElementById('debug-info');
+        debugInfo.style.display = debugInfo.style.display === 'none' ? 'block' : 'none';
+    }
+});
+
+// Initial update
+updateTotalWordCount();
+</script>
+{% endblock %}
