@@ -1,0 +1,237 @@
+{% extends "layout.html" %}
+
+{% block title %}Dashboard - SurveyZim{% endblock %}
+
+{% block year %}{{ current_year }}{% endblock %}
+
+{% block content %}
+<style>
+    /* Dashboard-specific styles */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1.5rem; /* 24px */
+        margin-bottom: 2rem; /* 32px */
+    }
+
+    .stat-card {
+        /* We re-use the .card component from layout.html */
+        display: flex;
+        align-items: center;
+        gap: 1.5rem; /* 24px */
+        padding: 1.5rem; /* 24px */
+    }
+
+    .stat-card .icon {
+        font-size: 2.5rem; /* 40px */
+        padding: 1rem; /* 16px */
+        border-radius: 8px;
+        color: var(--brand-green-dark);
+        background-color: var(--brand-bg-soft);
+    }
+    
+    .stat-card .info h3 {
+        font-size: 2rem; /* 32px */
+        font-weight: 700;
+        color: var(--brand-text-dark);
+        line-height: 1.2;
+    }
+    
+    .stat-card .info p {
+        font-size: 0.9rem; /* 14px */
+        color: #6B7280;
+        font-weight: 500;
+    }
+
+    .card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem; /* 24px */
+        padding-bottom: 1.5rem; /* 24px */
+        border-bottom: 1px solid var(--brand-border);
+    }
+    
+    .card-header h2 {
+        font-size: 1.5rem; /* 24px */
+        font-weight: 600;
+        margin: 0;
+    }
+    
+    .table-actions {
+        display: flex;
+        gap: 0.75rem; /* 12px */
+    }
+    
+    /* New icon-only button style for tables */
+    .btn-icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 36px;
+        height: 36px;
+        border: 1px solid var(--brand-border);
+        border-radius: 6px;
+        color: var(--brand-text-dark);
+        background-color: var(--brand-bg-light);
+        text-decoration: none;
+        transition: all 0.2s ease;
+        cursor: pointer; /* Added for forms */
+    }
+    
+    .btn-icon:hover {
+        background-color: var(--brand-bg-soft);
+        color: var(--brand-green-dark);
+        border-color: var(--brand-green-dark);
+    }
+    
+    .btn-icon-danger:hover {
+        background-color: #FEF2F2;
+        color: var(--brand-danger);
+        border-color: var(--brand-danger);
+    }
+
+    /* Style for disabled primary button */
+    .btn.btn-primary[disabled] {
+        opacity: 0.6;
+        cursor: not-allowed;
+        background-color: #D1D5DB;
+        border-color: #D1D5DB;
+        color: #6B7280;
+    }
+    
+    .limit-info {
+        text-align: right;
+        font-size: 0.9rem;
+        color: #6B7280;
+        margin-top: -1rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .limit-info-banner {
+        text-align: right;
+        font-size: 0.9rem;
+        color: #4B5563;
+        margin-top: -1rem;
+        margin-bottom: 1.5rem;
+        background-color: var(--brand-bg-soft);
+        padding: 0.75rem 1.25rem;
+        border-radius: 6px;
+        border: 1px solid var(--brand-border);
+    }
+
+</style>
+
+<div class="container">
+    <h1 class="page-title">
+        <i class="fas fa-tachometer-alt"></i> My Dashboard
+    </h1>
+
+    <!-- New Stats Grid -->
+    <div class="stats-grid">
+        <div class="card stat-card">
+            <div class="icon">
+                <i class="fas fa-clipboard-list"></i>
+            </div>
+            <div class="info">
+                <h3>{{ surveys|length }}</h3>
+                <p>Total Surveys</p>
+            </div>
+        </div>
+        <div class="card stat-card">
+            <div class="icon">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            <div class="info">
+                <h3>{{ surveys|selectattr('published')|list|length }}</h3>
+                <p>Published</p>
+            </div>
+        </div>
+        <div class="card stat-card">
+            <div class="icon">
+                <i class="fas fa-users"></i>
+            </div>
+            <div class="info">
+                <h3>{{ total_responses }}</h3>
+                <p>Total Responses</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Surveys List Card -->
+    <div class="card">
+        <div class="card-header">
+            <h2>My Surveys</h2>
+            
+            <!-- --- SURVEY LIMIT LOGIC --- -->
+            {% set survey_count = surveys|length %}
+            {% set survey_limit = 5 %}
+
+            {% if survey_count >= survey_limit %}
+                <button class="btn btn-primary" disabled title="Coming Soon!">
+                    <i class="fas fa-arrow-up"></i> Upgrade for More Surveys
+                </button>
+            {% else %}
+                <a href="{{ url_for('main.create_survey') }}" class="btn btn-primary">
+                    <i class="fas fa-plus"></i> Create New Survey
+                </a>
+            {% endif %}
+            <!-- --- END OF LOGIC --- -->
+        </div>
+
+        <!-- --- LIMIT INFO DISPLAY --- -->
+        {% if survey_count >= survey_limit %}
+        <div class="limit-info-banner">
+            You've reached the <strong>{{ survey_limit }} survey limit</strong> for the free plan. Paid plans are coming soon!
+        </div>
+        {% else %}
+        <div class="limit-info">
+            You are using <strong>{{ survey_count }}</strong> of <strong>{{ survey_limit }}</strong> available surveys.
+        </div>
+        {% endif %}
+        <!-- --- END OF INFO --- -->
+
+
+        <!-- New Table Wrapper for styling and overflow -->
+        <div class="table-wrapper">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Title</th>
+                        <th>Description</th>
+                        <th>Questions</th>
+                        <th>Created At</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for survey in surveys %}
+                    <tr>
+                        <td>{{ survey.title }}</td>
+                        <td>{{ survey.description or 'No description' }}</td>
+                        <td>{{ survey.questions|length }}</td>
+                        <td>{{ survey.created_at.strftime('%Y-%m-%d') }}</td>
+                        <td>
+                            <!-- --- MODIFIED TABLE ACTIONS --- -->
+                            <div class="table-actions">
+                                <a href="{{ url_for('main.survey_view', survey_id=survey.id) }}" class="btn-icon" title="View & Edit">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <!-- Delete button removed -->
+                            </div>
+                            <!-- --- END OF MODIFICATION --- -->
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="5" style="text-align: center; padding: 2rem;">
+                            You haven't created any surveys yet.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

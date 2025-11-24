@@ -1,0 +1,269 @@
+{% extends "layout.html" %}
+
+<!-- Set the footer year -->
+{% block year %}{{ current_year }}{% endblock %}
+
+{% block content %}
+<style>
+    /* About Page Styles */
+    .about-hero {
+        background-color: var(--brand-bg-light);
+        padding: 3rem 0;
+        text-align: center;
+        border-bottom: 1px solid var(--brand-border);
+    }
+
+    .about-hero h1 {
+        font-size: 2.5rem;
+        color: var(--brand-text-dark);
+        margin-bottom: 1rem;
+    }
+
+    .about-hero .subtitle {
+        color: var(--brand-green-dark);
+        font-size: 1.25rem;
+        font-weight: 600;
+        max-width: 600px;
+        margin: 0 auto;
+    }
+
+    .about-content {
+        padding: 4rem 0;
+        max-width: 800px;
+        margin: 0 auto;
+    }
+
+    .about-section {
+        margin-bottom: 3rem;
+    }
+
+    .about-section h2 {
+        color: var(--brand-text-dark);
+        font-size: 1.5rem;
+        margin-bottom: 1rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 2px solid var(--brand-green-light);
+    }
+
+    .about-section h3 {
+        color: var(--brand-text-dark);
+        font-size: 1.25rem;
+        margin: 1.5rem 0 0.5rem 0;
+    }
+
+    .about-section p {
+        color: #4B5563;
+        line-height: 1.7;
+        margin-bottom: 1rem;
+    }
+
+    .about-section ul {
+        color: #4B5563;
+        line-height: 1.7;
+        margin-left: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .about-section li {
+        margin-bottom: 0.5rem;
+        position: relative;
+        padding-left: 0.5rem;
+    }
+
+    .highlight-box {
+        background-color: var(--brand-bg-soft);
+        border-left: 4px solid var(--brand-green-dark);
+        padding: 1.5rem;
+        margin: 2rem 0;
+        border-radius: 0 8px 8px 0;
+    }
+
+    .highlight-box p {
+        margin-bottom: 0;
+        color: var(--brand-text-dark);
+        font-weight: 500;
+        font-style: italic;
+    }
+
+    .commitment-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1.5rem;
+        margin: 2rem 0;
+    }
+
+    .commitment-item {
+        background: var(--brand-bg-soft);
+        padding: 1.5rem;
+        border-radius: 8px;
+        border-left: 4px solid var(--brand-green-dark);
+    }
+
+    .commitment-item h4 {
+        color: var(--brand-text-dark);
+        margin-bottom: 0.5rem;
+        font-size: 1.1rem;
+    }
+
+    .commitment-item p {
+        margin-bottom: 0;
+        font-size: 0.95rem;
+    }
+
+    .benefits-section {
+        background: var(--brand-bg-soft);
+        padding: 2rem;
+        border-radius: 8px;
+        margin: 2rem 0;
+    }
+
+    .benefits-section h3 {
+        color: var(--brand-green-dark);
+        margin-top: 0;
+    }
+
+    .cta-section {
+        text-align: center;
+        padding: 3rem 0;
+        background: var(--brand-bg-light);
+        border-top: 1px solid var(--brand-border);
+        margin-top: 2rem;
+    }
+
+    .mission-statement {
+        font-size: 1.1rem;
+        font-weight: 500;
+        color: var(--brand-text-dark);
+        text-align: center;
+        margin: 2rem 0;
+        padding: 1.5rem;
+        background: var(--brand-bg-soft);
+        border-radius: 8px;
+        border: 1px solid var(--brand-border);
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .about-hero h1 {
+            font-size: 2rem;
+        }
+        
+        .about-content {
+            padding: 2rem 1rem;
+        }
+        
+        .about-hero {
+            padding: 2rem 1rem;
+        }
+        
+        .commitment-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .benefits-section {
+            padding: 1.5rem;
+        }
+    }
+</style>
+
+<!-- Hero Section -->
+<section class="about-hero">
+    <div class="container">
+        <h1>About Us — SurveyZim</h1>
+        <p class="subtitle">Building Zimbabwe's data sovereignty, one survey at a time</p>
+    </div>
+</section>
+
+<!-- About Content -->
+<section class="about-content">
+    <div class="container">
+        <div class="mission-statement">
+            SurveyZim exists to make sure Zimbabweans control, benefit from, and shape the data that describes our lives. We build tools, host data locally, and train people so that insights about Zimbabwe come from Zimbabwe not from servers and dashboards abroad.
+        </div>
+
+        <div class="about-section">
+            <h2>Why Data Sovereignty Matters for Zimbabwe</h2>
+            <p>For too long, external platforms have collected our stories, analysed them elsewhere, and captured the value. That leaves our researchers, policymakers and communities without the locally rooted intelligence they need.</p>
+            <p>Data sovereignty is about more than storage it is about ownership, trust, and the ability to turn insight into action inside our borders.</p>
+        </div>
+
+        <div class="about-section">
+            <h2>What We Do</h2>
+            <ul>
+                <li><strong>Own our narrative</strong> — Capture authentic Zimbabwean perspectives without foreign interpretation.</li>
+                <li><strong>Build local data assets</strong> — Create anonymized, reusable datasets that stay within Zimbabwe.</li>
+                <li><strong>Develop indigenous analysis</strong> — Train and equip local researchers and data scientists.</li>
+                <li><strong>Control our digital future</strong> — Ensure decisions about data use are made by Zimbabweans, for Zimbabweans.</li>
+            </ul>
+        </div>
+
+        <div class="about-section">
+            <h2>Our Vision</h2>
+            <p>A Zimbabwe where data strengthens communities, informs policy, and fuels homegrown innovation: local storage and processing of sensitive research data; clear, locally governed standards; and data-driven decisions that reflect Zimbabwe's realities.</p>
+        </div>
+
+        <div class="about-section">
+            <h2>How SurveyZim Contributes to National Progress</h2>
+            <ul>
+                <li><strong>National research repository</strong> — Aggregated, anonymized survey data for the public good.</li>
+                <li><strong>Stronger research capacity</strong> — Practical training and tools for students, researchers and civil society.</li>
+                <li><strong>Better policy and service design</strong> — Evidence grounded in local context for health, education, agriculture and business.</li>
+                <li><strong>Economic opportunity</strong> — Data assets that enable local innovation and investment.</li>
+            </ul>
+        </div>
+
+        <div class="about-section">
+            <h2>Our Commitments</h2>
+            <div class="commitment-grid">
+                <div class="commitment-item">
+                    <h4>Built in Zimbabwe, for Zimbabwe</h4>
+                    <p>Technology and processes designed around local needs.</p>
+                </div>
+                <div class="commitment-item">
+                    <h4>Local Hosting and Privacy</h4>
+                    <p>Sensitive research data is stored and processed within Zimbabwe where possible.</p>
+                </div>
+                <div class="commitment-item">
+                    <h4>Capacity Building</h4>
+                    <p>Partnerships with universities, researchers and community organisations to grow skills.</p>
+                </div>
+                <div class="commitment-item">
+                    <h4>Transparent Practice</h4>
+                    <p>Clear consent, anonymization and sharing policies that put communities first.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="about-section">
+            <h2>Who Benefits</h2>
+            <div class="benefits-section">
+                <h3>Researchers</h3>
+                <p>Get affordable, powerful tools that respect data sovereignty.</p>
+                
+                <h3>Communities</h3>
+                <p>Receive clearer feedback, visible benefits and ethical handling of their information.</p>
+                
+                <h3>Policymakers and Businesses</h3>
+                <p>Access locally relevant evidence to make better decisions.</p>
+                
+                <h3>Future Generations</h3>
+                <p>Inherit a national data asset that supports innovation and resilience.</p>
+            </div>
+        </div>
+
+        <div class="highlight-box">
+            <p>Using SurveyZim is an act of nation building. Every survey contributes to a shared resource that belongs to Zimbabwe, improving research quality, growing local expertise, and keeping our insights where they can do the most good.</p>
+        </div>
+
+        <div class="cta-section">
+            <h3>This is our data. This is our story. This is our future.</h3>
+            <p><strong>SurveyZim — building Zimbabwe's big-data ecosystem, one authentic insight at a time.</strong></p>
+            {% if not current_user.is_authenticated %}
+                <a href="{{ url_for('main.register') }}" class="btn btn-primary" style="margin-top: 1rem;">
+                    Join the Movement
+                </a>
+            {% endif %}
+        </div>
+    </div>
+</section>
+{% endblock %}

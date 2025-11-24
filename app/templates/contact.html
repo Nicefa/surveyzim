@@ -1,0 +1,42 @@
+{% extends "layout.html" %}
+
+{% block title %}Contact Us - SurveyZim{% endblock %}
+
+{% block year %}{{ current_year }}{% endblock %}
+
+{% block content %}
+<div class="form-container">
+    <div class="card">
+        <h2 class="page-title"><i class="fas fa-headset"></i> Contact Us</h2>
+        <p style="text-align: center; color: #6B7280; margin-bottom: 2rem;">
+            Fill out the form below or email us directly at 
+            <a href="mailto:sales@surveyzim.com" class="link">surveyziminfo@gmail.com</a>.
+        </p>
+        
+        <form method="POST" action="#">
+            <!-- In a real app, you'd add CSRF tokens and a proper action URL -->
+            
+            <div class="form-group">
+                <label for="name">Name</label>
+                <input type="text" id="name" name="name" class="form-input" placeholder="Your full name" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="email">Email</label>
+                <input type="email" id="email" name="email" class="form-input" placeholder="Your email address" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="message">Message</label>
+                <textarea id="message" name="message" class="form-input" rows="5" placeholder="How can we help you?" required></textarea>
+            </div>
+            
+            <div class="form-actions" style="justify-content: flex-end;">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-paper-plane"></i> Send Message
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

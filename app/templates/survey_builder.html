@@ -1,0 +1,325 @@
+{% extends "layout.html" %}
+
+{% block title %}Create Survey - SurveyZim{% endblock %}
+
+{% block year %}{{ current_year }}{% endblock %}
+
+{% block content %}
+<style>
+/* Rich Text Editor Styles */
+.rich-text-editor {
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    background: white;
+}
+
+.rich-text-toolbar {
+    display: flex;
+    gap: 4px;
+    padding: 8px;
+    border-bottom: 1px solid #e5e7eb;
+    background: #f9fafb;
+}
+
+.rich-text-toolbar button {
+    padding: 6px 8px;
+    border: 1px solid #d1d5db;
+    background: white;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.rich-text-toolbar button:hover {
+    background: #f3f4f6;
+}
+
+.rich-text-toolbar button.active {
+    background: #3b82f6;
+    color: white;
+    border-color: #3b82f6;
+}
+
+.rich-text-content {
+    min-height: 120px;
+    padding: 12px;
+    outline: none;
+    line-height: 1.5;
+}
+
+.rich-text-content:empty:before {
+    content: attr(data-placeholder);
+    color: #9ca3af;
+}
+
+.rich-text-content ul, .rich-text-content ol {
+    padding-left: 24px;
+    margin: 8px 0;
+}
+
+.rich-text-content ul {
+    list-style-type: disc;
+}
+
+.rich-text-content ol {
+    list-style-type: decimal;
+}
+
+.rich-text-content li {
+    margin: 4px 0;
+}
+
+/* Link input styles */
+.link-input-container {
+    display: flex;
+    gap: 8px;
+    padding: 8px;
+    border-bottom: 1px solid #e5e7eb;
+    background: #f9fafb;
+}
+
+.link-input-container input {
+    flex: 1;
+    padding: 6px 8px;
+    border: 1px solid #d1d5db;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+.link-input-container button {
+    padding: 6px 12px;
+    background: #3b82f6;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+</style>
+<div class="container">
+    <div id="survey-builder" style="max-width: 900px; margin: 0 auto;">
+        <div class="card">
+            <h2 class="page-title">
+                <i class="fas fa-plus-circle"></i> Create New Survey
+            </h2>
+
+            <form method="POST" id="survey-form" enctype="multipart/form-data">
+                {{ form.hidden_tag() }}
+
+                <!-- Survey Title -->
+                <div class="form-group">
+                    {{ form.title.label }}
+                    {{ form.title(class="form-input", placeholder="Enter survey title") }}
+                </div>
+
+                <!-- Survey Description -->
+                <div class="form-group">
+    <label for="description">Survey Description</label>
+    <div id="description-editor-container" class="rich-text-editor"></div>
+    {{ form.description(id="description", style="display: none;") }}
+</div>
+
+                <!-- Logo Upload -->
+                <div class="form-group">
+                    {{ form.logo.label }}
+                    {{ form.logo(class="form-input") }}
+                    <small style="color: #666; display: block; margin-top: 5px;">
+                        Upload a logo for your survey (JPG, PNG, GIF)
+                    </small>
+                </div>
+
+                <!-- Submit & Cancel -->
+                <div class="form-actions" style="margin-top: 30px; border-top: 1px solid var(--brand-border); padding-top: 1.5rem;">
+                    <a href="{{ url_for('main.dashboard') }}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i> Cancel
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Create Survey
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // No word count functionality needed here
+    // Survey builder only creates title, description, and logo
+    // Questions are added in survey_view.html
+});
+</script>
+<script>
+class RichTextEditor {
+    constructor(containerId, textareaId) {
+        this.container = document.getElementById(containerId);
+        this.textarea = document.getElementById(textareaId);
+        this.editor = null;
+        this.toolbar = null;
+        this.linkInputContainer = null;
+        this.linkUrlInput = null;
+        
+        this.init();
+    }
+    
+    init() {
+        this.createEditor();
+        this.setupEventListeners();
+        this.syncToTextarea();
+    }
+    
+    createEditor() {
+        // Create toolbar
+        this.toolbar = document.createElement('div');
+        this.toolbar.className = 'rich-text-toolbar';
+        this.toolbar.innerHTML = `
+            <button type="button" data-command="bold" title="Bold"><strong>B</strong></button>
+            <button type="button" data-command="italic" title="Italic"><em>I</em></button>
+            <button type="button" data-command="underline" title="Underline"><u>U</u></button>
+            <button type="button" data-command="insertUnorderedList" title="Bullet List">•</button>
+            <button type="button" data-command="insertOrderedList" title="Numbered List">1.</button>
+            <button type="button" data-command="createLink" title="Insert Link">🔗</button>
+            <button type="button" data-command="removeFormat" title="Remove Formatting">🗑️</button>
+        `;
+        
+        // Create link input container (hidden by default)
+        this.linkInputContainer = document.createElement('div');
+        this.linkInputContainer.className = 'link-input-container';
+        this.linkInputContainer.style.display = 'none';
+        this.linkInputContainer.innerHTML = `
+            <input type="text" placeholder="Enter URL (https://...)">
+            <button type="button" class="insert-link">Insert</button>
+            <button type="button" class="cancel-link">Cancel</button>
+        `;
+        
+        // Create editor content area
+        this.editor = document.createElement('div');
+        this.editor.className = 'rich-text-content';
+        this.editor.setAttribute('contenteditable', 'true');
+        this.editor.setAttribute('data-placeholder', 'Start typing...');
+        
+        // Set initial content from textarea
+        if (this.textarea.value) {
+            this.editor.innerHTML = this.textarea.value;
+        }
+        
+        // Assemble the editor
+        this.container.innerHTML = '';
+        this.container.appendChild(this.toolbar);
+        this.container.appendChild(this.linkInputContainer);
+        this.container.appendChild(this.editor);
+        
+        // Cache link input elements
+        this.linkUrlInput = this.linkInputContainer.querySelector('input');
+        this.insertLinkBtn = this.linkInputContainer.querySelector('.insert-link');
+        this.cancelLinkBtn = this.linkInputContainer.querySelector('.cancel-link');
+    }
+    
+    setupEventListeners() {
+        // Toolbar buttons
+        this.toolbar.addEventListener('click', (e) => {
+            if (e.target.tagName === 'BUTTON' || e.target.parentElement.tagName === 'BUTTON') {
+                const button = e.target.tagName === 'BUTTON' ? e.target : e.target.parentElement;
+                const command = button.dataset.command;
+                
+                if (command === 'createLink') {
+                    this.showLinkInput();
+                } else {
+                    this.execCommand(command);
+                }
+            }
+        });
+        
+        // Link input events
+        this.insertLinkBtn.addEventListener('click', () => {
+            this.insertLink();
+        });
+        
+        this.cancelLinkBtn.addEventListener('click', () => {
+            this.hideLinkInput();
+        });
+        
+        this.linkUrlInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                this.insertLink();
+            }
+        });
+        
+        // Sync content to textarea
+        this.editor.addEventListener('input', () => {
+            this.syncToTextarea();
+        });
+        
+        this.editor.addEventListener('blur', () => {
+            this.syncToTextarea();
+        });
+    }
+    
+    execCommand(command, value = null) {
+        document.execCommand(command, false, value);
+        this.editor.focus();
+        this.syncToTextarea();
+    }
+    
+    showLinkInput() {
+        this.linkInputContainer.style.display = 'flex';
+        this.linkUrlInput.value = '';
+        this.linkUrlInput.focus();
+    }
+    
+    hideLinkInput() {
+        this.linkInputContainer.style.display = 'none';
+        this.editor.focus();
+    }
+    
+    insertLink() {
+        const url = this.linkUrlInput.value.trim();
+        if (url) {
+            // Add https:// if no protocol specified
+            const fullUrl = url.startsWith('http') ? url : `https://${url}`;
+            this.execCommand('createLink', fullUrl);
+        }
+        this.hideLinkInput();
+    }
+    
+    syncToTextarea() {
+        this.textarea.value = this.editor.innerHTML;
+    }
+    
+    getContent() {
+        return this.editor.innerHTML;
+    }
+    
+    setContent(content) {
+        this.editor.innerHTML = content;
+        this.syncToTextarea();
+    }
+}
+
+// Initialize rich text editors when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize for survey description if exists
+    const descriptionContainer = document.getElementById('description-editor-container');
+    const descriptionTextarea = document.getElementById('description');
+    
+    if (descriptionContainer && descriptionTextarea) {
+        new RichTextEditor('description-editor-container', 'description');
+    }
+    
+    // Initialize for question text areas in survey builder
+    const questionTextareas = document.querySelectorAll('textarea[name="question_text[]"]');
+    questionTextareas.forEach((textarea, index) => {
+        const containerId = `question-editor-${index}`;
+        const container = document.createElement('div');
+        container.id = containerId;
+        container.className = 'rich-text-editor';
+        
+        textarea.parentNode.insertBefore(container, textarea);
+        textarea.style.display = 'none';
+        
+        new RichTextEditor(containerId, textarea.id || `question-text-${index}`);
+    });
+});
+</script>
+{% endblock %}

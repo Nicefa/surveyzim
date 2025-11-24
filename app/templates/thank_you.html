@@ -1,0 +1,23 @@
+{% extends "layout.html" %}
+
+{% block title %}Thank You - SurveyZim{% endblock %}
+
+{% block year %}{{ current_year }}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="card" style="max-width: 600px; margin: 2rem auto; text-align: center;">
+        <i class="fas fa-check-circle" style="color: var(--brand-green-dark); font-size: 4rem; margin-bottom: 1.5rem;"></i>
+        
+        <h2 class="page-title" style="margin-bottom: 1rem;">Thank You!</h2>
+        
+        <p style="font-size: 1.1rem; color: #6B7280; margin-bottom: 2rem;">
+            Your response has been recorded successfully.
+        </p>
+        
+        <a href="{{ url_for('main.index') }}" class="btn btn-primary">
+            <i class="fas fa-home"></i> Return to Home
+        </a>
+    </div>
+</div>
+{% endblock %}

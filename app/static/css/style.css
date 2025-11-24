@@ -1,0 +1,35 @@
+/* Logo upload styles */
+.logo-preview {
+    max-width: 300px;
+    max-height: 150px;
+    border-radius: 10px;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+    margin: 10px auto;
+    display: block;
+}
+
+.logo-upload-area {
+    border: 2px dashed #ddd;
+    border-radius: 10px;
+    padding: 30px;
+    text-align: center;
+    margin: 20px 0;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.logo-upload-area:hover {
+    border-color: var(--primary);
+    background: rgba(67, 97, 238, 0.05);
+}
+
+.logo-upload-area.dragover {
+    border-color: var(--primary);
+    background: rgba(67, 97, 238, 0.1);
+}
+
+.logo-placeholder {
+    font-size: 48px;
+    color: #ccc;
+    margin-bottom: 10px;
+}

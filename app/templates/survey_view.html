@@ -1,0 +1,1421 @@
+{% extends "layout.html" %}
+
+{% block title %}{{ survey.title }} - Details{% endblock %}
+
+{% block year %}{{ current_year }}{% endblock %}
+
+{% block content %}
+<style>
+    /* Two-column layout */
+    .survey-view-layout {
+        display: grid;
+        grid-template-columns: 1fr; /* Single column for mobile */
+        gap: 2rem; /* 32px */
+    }
+
+    @media (min-width: 1024px) {
+        .survey-view-layout {
+            grid-template-columns: 2fr 1fr; /* 2/3 main, 1/3 sidebar on desktop */
+        }
+    }
+
+    .main-content {
+        display: flex;
+        flex-direction: column;
+        gap: 2rem;
+    }
+
+    .sidebar {
+        display: flex;
+        flex-direction: column;
+        gap: 2rem;
+        position: sticky;
+        top: 100px; /* Aligns with header height */
+    }
+
+    /* --- Survey Details Card --- */
+    .survey-details-card {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+    .detail-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid var(--brand-border);
+    }
+    .detail-item:last-child {
+        border-bottom: none;
+        padding-bottom: 0;
+    }
+    .detail-item span {
+        font-size: 0.9rem;
+        color: #6B7280;
+        font-weight: 500;
+    }
+    .detail-item strong {
+        font-size: 1.1rem;
+        color: var(--brand-text-dark);
+    }
+    .detail-item strong.positive {
+        color: var(--brand-green-dark);
+    }
+    /* --- END Survey Details --- */
+
+    .logo-preview {
+        text-align: center;
+        margin: 1rem 0;
+    }
+    .logo-preview img {
+        max-height: 150px;
+        max-width: 100%;
+        border-radius: 8px;
+        border: 1px solid var(--brand-border);
+    }
+    .logo-placeholder {
+        text-align: center;
+        padding: 2rem;
+        border: 2px dashed var(--brand-border);
+        border-radius: 8px;
+        margin: 1rem 0;
+        color: #6B7280;
+    }
+    .logo-placeholder i {
+        font-size: 2.5rem;
+        margin-bottom: 0.5rem;
+        display: block;
+    }
+    .survey-description-sidebar {
+        color: #6B7280;
+        margin-bottom: 1rem;
+        word-break: break-word;
+        font-size: 0.95rem;
+        border-top: 1px solid var(--brand-border);
+        padding-top: 1rem;
+        margin-top: 1rem;
+    }
+    .action-list {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+    .action-list .btn,
+    .action-list form {
+        width: 100%;
+        margin: 0;
+    }
+    .action-list form .btn {
+        width: 100%;
+    }
+    #existing-questions-list {
+        max-height: 800px;
+        overflow-y: auto;
+        padding-right: 10px;
+        margin-top: 1.5rem;
+    }
+    .question-item {
+        background: var(--brand-bg-soft);
+        border: 1px solid var(--brand-border);
+        border-radius: 8px;
+        margin-bottom: 1.5rem;
+    }
+    .question-view-mode,
+    .question-edit-mode {
+        padding: 1.5rem;
+    }
+    .question-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid var(--brand-border);
+    }
+    .question-header h4 {
+        font-size: 1.1rem;
+        font-weight: 600;
+        margin: 0;
+    }
+    .question-actions {
+        display: flex;
+        gap: 0.5rem;
+    }
+    .question-body strong {
+        font-size: 1.1rem;
+        font-weight: 600;
+        display: block;
+        margin-bottom: 0.5rem;
+        word-break: break-word;
+    }
+    .question-body .details {
+        font-size: 0.875rem;
+        color: #6B7280;
+        margin-bottom: 1rem;
+    }
+    .question-body ul {
+        margin-top: 0.5rem;
+        padding-left: 1.25rem;
+    }
+    .option-input-group {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 8px;
+    }
+    .option-input-group .form-input {
+        flex: 1;
+    }
+    .options-container,
+    .linear-scale-fields,
+    .edit-options-container,
+    .edit-linear-scale-fields {
+        background: var(--brand-bg-light);
+        padding: 1rem;
+        border-radius: 8px;
+        margin-top: 10px;
+        border: 1px solid var(--brand-border);
+        display: none;
+    }
+    .options-container.show-options,
+    .linear-scale-fields.show-linear-scale,
+    .edit-options-container.show-options,
+    .edit-linear-scale-fields.show-linear-scale {
+        display: block;
+    }
+    .required-toggle {
+        margin-top: 10px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.9rem;
+        font-weight: 500;
+        cursor: pointer;
+    }
+    .required-toggle input {
+        width: 1.25em;
+        height: 1.25em;
+    }
+    .linear-scale-range {
+        display: flex;
+        gap: 1rem;
+        align-items: flex-end;
+        margin-bottom: 1.5rem;
+    }
+    .linear-scale-range .form-group {
+        margin-bottom: 0;
+    }
+    .linear-scale-labels {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+    }
+    .linear-scale-labels .form-group {
+        margin-bottom: 0;
+    }
+    .btn-icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 36px;
+        height: 36px;
+        border: 1px solid var(--brand-border);
+        border-radius: 6px;
+        color: var(--brand-text-dark);
+        background-color: var(--brand-bg-light);
+        text-decoration: none;
+        transition: all 0.2s ease;
+        cursor: pointer;
+    }
+    .btn-icon:hover {
+        background-color: var(--brand-bg-soft);
+        color: var(--brand-green-dark);
+        border-color: var(--brand-green-dark);
+    }
+    .btn-icon-danger:hover {
+        background-color: #FEF2F2;
+        color: var(--brand-danger);
+        border-color: var(--brand-danger);
+    }
+    .btn[disabled], 
+    .btn:disabled,
+    .btn-icon[disabled],
+    .btn-icon:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        background-color: #D1D5DB;
+        border-color: #D1D5DB;
+        color: #6B7280;
+        transform: none;
+        box-shadow: none;
+    }
+    .btn-icon-danger:disabled {
+        background-color: #D1D5DB;
+        border-color: #D1D5DB;
+        color: #6B7280;
+    }
+    .share-link-box {
+        margin-top: 1.5rem;
+        border-top: 1px solid var(--brand-border);
+        padding-top: 1.5rem;
+    }
+    .share-link-box label {
+        font-weight: 600;
+        font-size: 0.9rem;
+        margin-bottom: 0.5rem;
+        display: block;
+    }
+    .share-link-input-group {
+        display: flex;
+        gap: 0.5rem;
+    }
+    .share-link-input-group .form-input {
+        background-color: var(--brand-bg-light);
+        color: var(--brand-text-dark);
+        border: 1px solid var(--brand-border);
+        font-size: 0.9rem;
+    }
+    .share-link-input-group .btn-secondary {
+        flex-shrink: 0;
+    }
+    .question-word-count {
+        font-size: 0.875rem; /* 14px */
+        color: #6B7280;
+        margin-top: 5px;
+    }
+    
+    /* Tooltip styles for export button */
+    .tooltip-wrapper {
+        position: relative;
+        display: inline-block;
+        width: 100%;
+    }
+    .tooltip-wrapper .tooltip-text {
+        visibility: hidden;
+        width: 300px;
+        background-color: #333;
+        color: #fff;
+        text-align: center;
+        border-radius: 6px;
+        padding: 8px;
+        position: absolute;
+        z-index: 1;
+        bottom: 125%;
+        left: 50%;
+        margin-left: -150px;
+        opacity: 0;
+        transition: opacity 0.3s;
+        font-size: 0.875rem;
+        font-weight: normal;
+    }
+    .tooltip-wrapper .tooltip-text::after {
+        content: "";
+        position: absolute;
+        top: 100%;
+        left: 50%;
+        margin-left: -5px;
+        border-width: 5px;
+        border-style: solid;
+        border-color: #333 transparent transparent transparent;
+    }
+    .tooltip-wrapper:hover .tooltip-text {
+        visibility: visible;
+        opacity: 1;
+    }
+    .linear-scale-preview {
+    background: var(--brand-bg-soft);
+    padding: 1rem;
+    border-radius: 6px;
+    margin-top: 0.5rem;
+}
+
+.scale-range {
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+.scale-labels {
+    font-size: 0.9rem;
+    color: #6B7280;
+}
+
+.scale-label {
+    background: var(--brand-bg-light);
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    border: 1px solid var(--brand-border);
+    margin: 0 0.25rem;
+}
+</style>
+<style>
+/* Rich Text Editor Styles */
+.rich-text-editor {
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    background: white;
+}
+
+.rich-text-toolbar {
+    display: flex;
+    gap: 4px;
+    padding: 8px;
+    border-bottom: 1px solid #e5e7eb;
+    background: #f9fafb;
+}
+
+.rich-text-toolbar button {
+    padding: 6px 8px;
+    border: 1px solid #d1d5db;
+    background: white;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.rich-text-toolbar button:hover {
+    background: #f3f4f6;
+}
+
+.rich-text-toolbar button.active {
+    background: #3b82f6;
+    color: white;
+    border-color: #3b82f6;
+}
+
+.rich-text-content {
+    min-height: 120px;
+    padding: 12px;
+    outline: none;
+    line-height: 1.5;
+}
+
+.rich-text-content:empty:before {
+    content: attr(data-placeholder);
+    color: #9ca3af;
+}
+
+.rich-text-content ul, .rich-text-content ol {
+    padding-left: 24px;
+    margin: 8px 0;
+}
+
+.rich-text-content ul {
+    list-style-type: disc;
+}
+
+.rich-text-content ol {
+    list-style-type: decimal;
+}
+
+.rich-text-content li {
+    margin: 4px 0;
+}
+
+/* Link input styles */
+.link-input-container {
+    display: flex;
+    gap: 8px;
+    padding: 8px;
+    border-bottom: 1px solid #e5e7eb;
+    background: #f9fafb;
+}
+
+.link-input-container input {
+    flex: 1;
+    padding: 6px 8px;
+    border: 1px solid #d1d5db;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+.link-input-container button {
+    padding: 6px 12px;
+    background: #3b82f6;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+</style>
+<div class="container">
+    <h1 class="page-title"><i class="fas fa-poll"></i> {{ survey.title }}</h1>
+
+    <div class="survey-view-layout">
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Add Question Card -->
+            <div class="card">
+                <h3>Add New Questions</h3>
+                <form method="POST" id="question-form" action="{{ url_for('main.survey_view', survey_id=survey.id) }}">
+                    <div id="questions-container" style="margin-top: 1.5rem;">
+                        <!-- New questions will be injected here by JS -->
+                    </div>
+
+                    <div class="form-actions" style="justify-content: space-between; padding-top: 1.5rem; margin-top: 1.5rem; border-top: 1px solid var(--brand-border);">
+                        <button type="button" id="add-question" class="btn btn-secondary"
+                            {% if survey.published %}disabled title="Survey already published. Cannot add questions."{% endif %}>
+                            <i class="fas fa-plus"></i> Add Question
+                        </button>
+                        <button type="submit" class="btn btn-primary" id="submit-questions"
+                            {% if survey.published %}disabled title="Survey already published. Cannot save questions."{% endif %}>
+                            <i class="fas fa-save"></i> Save Questions
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Existing Questions Card -->
+            <div class="card">
+                <h3>Existing Questions ({{ questions|length }})</h3>
+                <div id="existing-questions-list">
+                    {% if questions %}
+                        {% for q in questions %}
+                            <div class="question-item" data-question-id="{{ q.id }}">
+                                <!-- View Mode -->
+                                <div class="question-view-mode">
+                                    <div class="question-header">
+                                        <h4>Question {{ loop.index }}</h4>
+                                        <div class="question-actions">
+                                            <button type="button" class="btn-icon edit-question-btn" 
+                                                    {% if survey.published %}disabled title="Survey already published. Cannot edit question."{% endif %}>
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            <form action="{{ url_for('main.delete_question', question_id=q.id) }}" method="POST" style="display: inline;">
+                                                <button type="submit" class="btn-icon btn-icon-danger"
+                                                    onclick="return confirm('Are you sure you want to delete this question?')"
+                                                    {% if survey.published %}disabled title="Survey already published. Cannot delete question."{% endif %}>
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                    <div class="question-body">
+                                        <strong>{{ q.text }}</strong>
+                                        <div class="details">
+                                            Type: {{ q.qtype | replace('_', ' ') | title }} | 
+                                            Words: <span class="q-word-count-display">{{ q.word_count }}</span> | 
+                                            Required: {{ 'Yes' if q.required else 'No' }}
+                                        </div>
+                                        
+                                        {% if q.options %}
+                                            <div>
+                                                <strong>Options ({{ q.options|length }}):</strong>
+                                                <ul>
+                                                    {% for opt in q.options %}
+                                                        <li>{{ opt.text }}</li>
+                                                    {% endfor %}
+                                                </ul>
+                                            </div>
+                                        {% endif %}
+
+                                        {% if q.qtype == 'linear_scale' %}
+                                    <div style="margin-top:10px;">
+                                        <strong>Linear Scale Settings:</strong>
+                                        <div class="linear-scale-preview">
+                                            <div class="scale-range">
+                                                Range: {{ q.linear_scale_low }} to {{ q.linear_scale_high }}
+                                            </div>
+                                            {% if q.linear_scale_low_label or q.linear_scale_high_label %}
+                                            <div class="scale-labels">
+                                                Labels: 
+                                                <span class="scale-label">{{ q.linear_scale_low_label or 'N/A' }}</span> 
+                                                - 
+                                                <span class="scale-label">{{ q.linear_scale_high_label or 'N/A' }}</span>
+                                            </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    {% endif %}
+                                    </div>
+                                </div>
+
+                                <!-- Edit Mode (Initially Hidden) -->
+                                <div class="question-edit-mode" style="display: none;">
+                                    <form method="POST" class="edit-question-form" 
+                                          action="{{ url_for('main.update_question', question_id=q.id) }}">
+                                        <div class="question-header">
+                                            <h4>Edit Question {{ loop.index }}</h4>
+                                            <div>
+                                                <button type="button" class="btn btn-secondary cancel-edit-btn">
+                                                    <i class="fas fa-times"></i> Cancel
+                                                </button>
+                                                <button type="submit" class="btn btn-primary">
+                                                    <i class="fas fa-save"></i> Save
+                                                </button>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="form-group">
+                                            <label>Question Text</label>
+                                            <input type="text" name="question_text" class="form-input edit-question-text" 
+                                                   value="{{ q.text }}" placeholder="Enter your question" required>
+                                            <div class="question-word-count">
+                                                <span class="edit-question-word-count">{{ q.word_count }}</span> words
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="form-group">
+                                            <label>Question Type</label>
+                                            <select name="question_type" class="form-select edit-question-type">
+                                                <option value="short" {% if q.qtype == 'short' %}selected{% endif %}>Short answer</option>
+                                                <option value="paragraph" {% if q.qtype == 'paragraph' %}selected{% endif %}>Paragraph</option>
+                                                <option value="multiple_choice" {% if q.qtype == 'multiple_choice' %}selected{% endif %}>Multiple choice</option>
+                                                <option value="checkbox" {% if q.qtype == 'checkbox' %}selected{% endif %}>Checkboxes</option>
+                                                <option value="dropdown" {% if q.qtype == 'dropdown' %}selected{% endif %}>Dropdown</option>
+                                                <option value="linear_scale" {% if q.qtype == 'linear_scale' %}selected{% endif %}>Linear Scale</option>
+                                            </select>
+                                        </div>
+                                        
+                                        <div class="form-group">
+                                            <label class="required-toggle">
+                                                <input type="checkbox" name="question_required" value="true" class="required-checkbox" {% if q.required %}checked{% endif %}> Required
+                                            </label>
+                                        </div>
+                                        
+                                        <!-- Options Container for Edit Mode -->
+                                        <div class="edit-options-container {% if q.qtype in ['multiple_choice', 'checkbox', 'dropdown'] %}show-options{% endif %}">
+                                            <label style="font-weight: 600; margin-bottom: 10px; display: block;">Options</label>
+                                            <div class="edit-options-list">
+                                                {% if q.options %}
+                                                    {% for opt in q.options %}
+                                                        <div class="option-input-group">
+                                                            <input type="text" class="form-input edit-option-text" 
+                                                                   name="options[]" value="{{ opt.text }}" placeholder="Option text" required>
+                                                            <button type="button" class="btn-icon btn-icon-danger remove-option">
+                                                                <i class="fas fa-trash"></i>
+                                                            </button>
+                                                        </div>
+                                                    {% endfor %}
+                                                {% endif %}
+                                            </div>
+                                            <button type="button" class="btn btn-secondary add-edit-option" style="margin-top: 10px;">
+                                                <i class="fas fa-plus"></i> Add Option
+                                            </button>
+                                            <div class="option-validation-message" style="display: none; color: var(--brand-danger); margin-top: 10px;">
+                                                <i class="fas fa-exclamation-triangle"></i>
+                                                This question type must have at least one option.
+                                            </div>
+                                        </div>
+                                                
+                                        <!-- Linear Scale Fields for Edit Mode -->
+                                        <div class="edit-linear-scale-fields {% if q.qtype == 'linear_scale' %}show-linear-scale{% endif %}">
+                                            <label style="font-weight: 600; margin-bottom: 1.5rem; display: block;">Linear Scale Settings</label>
+                                            <div class="linear-scale-range">
+                                                <div class="form-group">
+                                                    <label>Low Value:</label>
+                                                    <input type="number" class="form-input edit-linear-scale-low" name="linear_scale_low" 
+                                                           value="{{ q.linear_scale_low if q.linear_scale_low else 1 }}" min="0" max="10">
+                                                </div>
+                                                <span>to</span>
+                                                <div class="form-group">
+                                                    <label>High Value:</label>
+                                                    <input type="number" class="form-input edit-linear-scale-high" name="linear_scale_high" 
+                                                           value="{{ q.linear_scale_high if q.linear_scale_high else 5 }}" min="1" max="10">
+                                                </div>
+                                            </div>
+                                            <div class="linear-scale-labels">
+                                                <div class="form-group">
+                                                    <label>Low Label (Optional):</label>
+                                                    <input type="text" class="form-input edit-linear-scale-low-label" name="linear_scale_low_label" 
+                                                           value="{{ q.linear_scale_low_label or '' }}" placeholder="e.g., Poor">
+                                                </div>
+                                                <div class="form-group">
+                                                    <label>High Label (Optional):</label>
+                                                    <input type="text" class="form-input edit-linear-scale-high-label" name="linear_scale_high_label" 
+                                                           value="{{ q.linear_scale_high_label or '' }}" placeholder="e.g., Excellent">
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <p style="text-align: center; padding: 2rem; color: #6B7280;">No questions added yet.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="sidebar">
+            
+            <!-- Survey Details Card -->
+            <div class="card">
+                <h3>Survey Details</h3>
+                <div class="survey-details-card">
+                    <div class="detail-item">
+                        <span>Total Word Count</span>
+                        <strong id="total-word-count-display">{{ total_word_count }}</strong>
+                    </div>
+                    <div class="detail-item">
+                        <span>Distribution Tier</span>
+                        <strong id="dist-days-display" class="positive">{{ distribution_days }} days</strong>
+                    </div>
+                    {% if survey.published %}
+                    <div class="detail-item">
+                        <span>Status</span>
+                        <strong class="positive">Published</strong>
+                    </div>
+                    <div class="detail-item">
+                        <span>Expires On</span>
+                        <strong>{{ expiration_date.strftime('%b %d, %Y') if expiration_date else 'N/A' }}</strong>
+                    </div>
+                    {% else %}
+                    <div class="detail-item">
+                        <span>Status</span>
+                        <strong>Draft</strong>
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <!-- Word Count Tiers Information -->
+                <div style="margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid var(--brand-border);">
+                    <h4 style="font-size: 0.9rem; margin-bottom: 0.5rem;">Distribution Tiers:</h4>
+                    <ul style="font-size: 0.8rem; color: #6B7280; padding-left: 1rem;">
+                        <li>0-500 words: 7 days</li>
+                        <li>501-1000 words: 14 days</li>
+                        <li>1001-2000 words: 30 days</li>
+                        <li>2001+ words: 60 days</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Logo Card -->
+            <div class="card">
+                <h3>Survey Logo</h3>
+                {% if survey.logo_filename %}
+                    <div class="logo-preview">
+                        <img src="{{ url_for('static', filename='survey_logos/' + survey.logo_filename) }}" 
+                             alt="Survey Logo">
+                    </div>
+                    <form action="{{ url_for('main.remove_survey_logo', survey_id=survey.id) }}" method="POST">
+                        <button type="submit" class="btn btn-danger" style="width: 100%;">
+                            <i class="fas fa-trash"></i> Remove Logo
+                        </button>
+                    </form>
+                {% else %}
+                    <div class="logo-placeholder">
+                        <i class="fas fa-image"></i>
+                        <p>No logo uploaded</p>
+                    </div>
+                {% endif %}
+                
+                <form action="{{ url_for('main.upload_survey_logo', survey_id=survey.id) }}" method="POST" enctype="multipart/form-data" style="margin-top: 1rem;">
+                    <div class="form-group">
+                        <label for="logo" style="display: none;">Upload Logo</label>
+                        <input type="file" name="logo" id="logo" class="form-input" accept="image/*" required>
+                        <small style="color: #6B7280; display: block; margin-top: 5px;">
+                            Max size: 5MB (JPG, PNG, GIF)
+                        </small>
+                    </div>
+                    <button type="submit" class="btn btn-secondary" style="width: 100%;">
+                        <i class="fas fa-upload"></i> Upload Logo
+                    </button>
+                </form>
+
+                <p class="survey-description-sidebar">
+                    <strong>Description:</strong> {{ survey.description or 'No description provided.' }}
+                </p>
+            </div>
+
+            <!-- Actions Card -->
+            <div class="card">
+                <h3>Survey Actions</h3>
+                <div class="action-list">
+                    <a href="{{ url_for('main.preview_survey', survey_id=survey.id) }}" 
+                       class="btn btn-secondary"
+                       {% if questions|length == 0 %} disabled title="Add at least one question to preview survey." {% endif %}>
+                        <i class="fas fa-eye"></i> Preview Survey
+                    </a>
+
+                    <form action="{{ url_for('main.publish_survey', survey_id=survey.id) }}" method="POST">
+                        <button type="submit" class="btn btn-primary" id="publish-btn"
+                            {% if survey.published %}disabled title="Survey already published."{% endif %}>
+                            <i class="fas fa-paper-plane"></i> 
+                            {% if survey.published %}Already Published{% else %}Publish Survey{% endif %}
+                        </button>
+                    </form>
+                    
+                    {% if survey.published and (survey.response_count or 0) > 0 %}
+                        {% if distribution_over %}
+                            <a href="{{ url_for('main.export_survey_responses', survey_id=survey.id) }}" class="btn btn-secondary">
+                                <i class="fas fa-download"></i> Export Responses (CSV)
+                            </a>
+                        {% else %}
+                            <div class="tooltip-wrapper">
+                                <button class="btn btn-secondary" disabled>
+                                    <i class="fas fa-download"></i> Export Responses (CSV)
+                                </button>
+                                <span class="tooltip-text">
+                                    Export available after distribution period ends.<br>
+                                    This survey is active for {{ survey.distribution_days }} days total.<br>
+                                    {% if expiration_date %}
+                                        Distribution ends: {{ expiration_date.strftime('%b %d, %Y') }}
+                                    {% endif %}
+                                </span>
+                            </div>
+                        {% endif %}
+                    {% endif %}
+                </div>
+
+                <!-- Shareable Link Box -->
+                {% if survey.published and survey.survey_url %}
+                <div class="share-link-box">
+                    <label for="shareable-link">Your Shareable Link:</label>
+                    <div class="share-link-input-group">
+                        <input type="text" id="shareable-link" class="form-input" value="{{ survey.survey_url }}" readonly>
+                        <button class="btn btn-secondary" id="copy-link-btn" title="Copy link">
+                            <i class="fas fa-copy"></i>
+                        </button>
+                    </div>
+                </div>
+                {% endif %}
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Hidden data element for JS -->
+<div id="server-data" 
+     data-is-published="{{ 'true' if survey.published else 'false' }}"
+     style="display: none;">
+</div>
+{% endblock %}
+
+
+{% block scripts %}
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    
+    // --- COPY LINK BUTTON LOGIC ---
+    const copyBtn = document.getElementById('copy-link-btn');
+    if (copyBtn) {
+        copyBtn.addEventListener('click', function() {
+            const linkInput = document.getElementById('shareable-link');
+            linkInput.select();
+            linkInput.setSelectionRange(0, 99999);
+            
+            try {
+                navigator.clipboard.writeText(linkInput.value).then(() => {
+                    const icon = copyBtn.querySelector('i');
+                    const originalIcon = icon.className;
+                    icon.className = 'fas fa-check';
+                    copyBtn.title = 'Copied!';
+                    
+                    setTimeout(() => {
+                        icon.className = originalIcon;
+                        copyBtn.title = 'Copy link';
+                    }, 2000);
+                    
+                }).catch(err => {
+                    document.execCommand('copy');
+                });
+            } catch (err) {
+                document.execCommand('copy');
+            }
+        });
+    }
+    // --- END ---
+
+    // ---- CONSTANTS & DOM ELEMENTS ----
+    const serverData = document.getElementById('server-data');
+    const isPublished = serverData.dataset.isPublished === 'true';
+    const questionsContainer = document.getElementById('questions-container');
+    const existingQuestionsList = document.getElementById('existing-questions-list');
+    const submitBtn = document.getElementById('submit-questions');
+    const addQuestionBtn = document.getElementById('add-question');
+    
+    // --- Word Count & Tier Elements ---
+    const totalWordCountDisplay = document.getElementById('total-word-count-display');
+    const distDaysDisplay = document.getElementById('dist-days-display');
+    // --- END ---
+
+    // ---- Word Count & Tier Logic ----
+    function countWords(text) {
+        if (!text || typeof text !== 'string') return 0;
+        const trimmedText = text.trim().replace(/\s+/g, ' ');
+        if (!trimmedText) return 0;
+        return trimmedText.split(' ').length;
+    }
+    
+    function getDistDays(wordCount) {
+        if (wordCount <= 500) return 7;
+        if (wordCount <= 1000) return 14;
+        if (wordCount <= 2000) return 30;
+        return 60; // 2001+ words
+    }
+    
+    function liveUpdateTotalWordCount() {
+        let totalWords = 0; // Start from 0 - don't count title/description
+
+        // Count existing questions (in edit mode)
+        document.querySelectorAll('.edit-question-text').forEach(input => {
+            totalWords += countWords(input.value);
+        });
+        
+            // Count new (unsaved) questions - handle both regular inputs and rich text editors
+    document.querySelectorAll('.question-text-input').forEach(input => {
+        totalWords += countWords(input.value);
+    });
+    
+    // Count rich text editor content
+    document.querySelectorAll('.rich-text-content').forEach(editor => {
+        const text = editor.innerText || editor.textContent;
+        totalWords += countWords(text);
+    });
+
+        // Update the sidebar
+        if(totalWordCountDisplay) {
+            totalWordCountDisplay.textContent = totalWords;
+        }
+        if(distDaysDisplay) {
+            const days = getDistDays(totalWords);
+            distDaysDisplay.textContent = `${days} days`;
+        }
+    }
+    // --- END ---
+
+    // ---- NEW QUESTION LOGIC ----
+    let questionCount = 0; // For unique names in new questions
+    
+    function createQuestionBlock() {
+    const questionId = Date.now();
+    const currentIndex = questionCount;
+    questionCount++;
+    
+    const qDiv = document.createElement("div");
+    qDiv.className = "question-item";
+    qDiv.dataset.id = questionId;
+    qDiv.innerHTML = `
+        <div class="question-header" style="border-bottom: none; margin-bottom: 0;">
+            <h4>New Question</h4>
+            <button type="button" class="btn-icon btn-icon-danger delete-question">
+                <i class="fas fa-trash"></i>
+            </button>
+        </div>
+        <div style="padding: 1.5rem; padding-top: 0;">
+            <div class="form-group">
+                <label>Question Text</label>
+                <div id="question-editor-${questionId}" class="rich-text-editor"></div>
+                <textarea name="question_text[]" id="question-text-${questionId}" style="display: none;" required></textarea>
+                <div class="question-word-count">
+                    <span class="question-word-count-value">0</span> words
+                </div>
+            </div>
+            <div class="form-group">
+                <select name="question_type[]" class="form-select question-type">
+                    <option value="short">Short answer</option>
+                    <option value="paragraph">Paragraph</option>
+                    <option value="multiple_choice">Multiple choice</option>
+                    <option value="checkbox">Checkboxes</option>
+                    <option value="dropdown">Dropdown</option>
+                    <option value="linear_scale">Linear Scale</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="required-toggle">
+                    <input type="checkbox" name="question_required[]" value="true" class="required-checkbox">
+                    Required
+                </label>
+            </div>
+            <div class="options-container" style="display:none;">
+                <label style="font-weight: 600; margin-bottom: 10px; display: block;">Options:</label>
+                <div class="options-list"></div>
+                <button type="button" class="btn btn-secondary add-option">
+                    <i class="fas fa-plus"></i> Add Option
+                </button>
+                <div class="option-validation-message" style="display: none; color: var(--brand-danger);">
+                    <i class="fas fa-exclamation-triangle"></i> This type must have at least one option.
+                </div>
+            </div>
+            <div class="linear-scale-fields" style="display:none;">
+                <label style="font-weight: 600; margin-bottom: 1.5rem; display: block;">Linear Scale Settings:</label>
+                <div class="linear-scale-range">
+                    <div class="form-group">
+                        <label>Low Value:</label>
+                        <input type="number" class="form-input linear-scale-low" name="linear_scale_low[]" 
+                               value="1" min="0" max="10">
+                    </div>
+                    <span>to</span>
+                    <div class="form-group">
+                        <label>High Value:</label>
+                        <input type="number" class="form-input linear-scale-high" name="linear_scale_high[]" 
+                               value="5" min="1" max="10">
+                    </div>
+                </div>
+                <div class="linear-scale-labels">
+                    <div class="form-group">
+                        <label>Low Label (Optional):</label>
+                        <input type="text" class="form-input linear-scale-low-label" name="linear_scale_low_label[]" 
+                               placeholder="e.g., Poor">
+                    </div>
+                    <div class="form-group">
+                        <label>High Label (Optional):</label>
+                        <input type="text" class="form-input linear-scale-high-label" name="linear_scale_high_label[]" 
+                               placeholder="e.g., Excellent">
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    questionsContainer.appendChild(qDiv);
+    // Initialize rich text editor for the new question
+    const richTextEditor = new RichTextEditor(`question-editor-${questionId}`, `question-text-${questionId}`);
+    
+    // Update word count when rich text editor content changes
+    richTextEditor.editor.addEventListener('input', function() {
+        const text = this.innerText || this.textContent;
+        const words = countWords(text);
+        const wordCountSpan = qDiv.querySelector('.question-word-count-value');
+        if (wordCountSpan) {
+            wordCountSpan.textContent = words;
+        }
+        liveUpdateTotalWordCount();
+    });
+
+    // Add event listeners
+    const typeSelect = qDiv.querySelector(".question-type");
+    const questionInput = qDiv.querySelector(".question-text-input");
+    const questionWordCount = qDiv.querySelector(".question-word-count-value");
+    const addOptionBtn = qDiv.querySelector(".add-option");
+    const optionsList = qDiv.querySelector('.options-list');
+    const requiredCheckbox = qDiv.querySelector('.required-checkbox');
+
+    // Set default value for unchecked required checkbox
+    const requiredHiddenInput = document.createElement('input');
+    requiredHiddenInput.type = 'hidden';
+    requiredHiddenInput.name = 'question_required[]';
+    requiredHiddenInput.value = 'false';
+    qDiv.appendChild(requiredHiddenInput);
+
+    requiredCheckbox.addEventListener('change', function() {
+        requiredHiddenInput.value = this.checked ? 'true' : 'false';
+    });
+
+        // Remove this old event listener:
+    // questionInput.addEventListener('input', function() {
+    //     const words = countWords(this.value);
+    //     questionWordCount.textContent = words;
+    //     liveUpdateTotalWordCount();
+    // });
+    
+    // And use the rich text editor event listener we added above instead
+    
+    typeSelect.addEventListener("change", () => {
+        toggleQuestionTypeFields(qDiv, typeSelect.value, true, currentIndex);
+        if (['multiple_choice', 'checkbox', 'dropdown'].includes(typeSelect.value) && optionsList.children.length === 0) {
+            addOptionToNewQuestion(qDiv, currentIndex);
+        }
+    });
+    addOptionBtn.addEventListener("click", () => addOptionToNewQuestion(qDiv, currentIndex));
+    qDiv.querySelector(".delete-question").addEventListener("click", () => {
+        qDiv.remove();
+        liveUpdateTotalWordCount();
+    });
+
+    toggleQuestionTypeFields(qDiv, typeSelect.value, true, currentIndex);
+    return qDiv;
+}
+
+    function addOptionToNewQuestion(questionElement, index) {
+        const optionsList = questionElement.querySelector('.options-list');
+        const optionDiv = document.createElement("div");
+        optionDiv.className = "option-input-group";
+        optionDiv.innerHTML = `
+            <input type="text" name="options[${index}][]" class="form-input option-text-input" placeholder="Option text" required>
+            <button type="button" class="btn-icon btn-icon-danger remove-option">
+                <i class="fas fa-trash"></i>
+            </button>
+        `;
+        optionsList.appendChild(optionDiv);
+        optionDiv.querySelector(".remove-option").addEventListener("click", () => {
+            optionDiv.remove();
+            validateNewQuestionOptions(questionElement);
+        });
+        validateNewQuestionOptions(questionElement);
+    }
+
+    function validateNewQuestionOptions(questionElement) {
+        const optionsContainer = questionElement.querySelector('.options-container');
+        const type = questionElement.querySelector('.question-type').value;
+
+        if (!['multiple_choice', 'checkbox', 'dropdown'].includes(type)) {
+            if (optionsContainer) {
+                const validationMessage = optionsContainer.querySelector('.option-validation-message');
+                if (validationMessage) validationMessage.style.display = 'none';
+            }
+            return true;
+        }
+
+        const options = optionsContainer.querySelectorAll('.option-text-input');
+        const hasValidOptions = Array.from(options).some(opt => opt.value.trim() !== '');
+        const validationMessage = optionsContainer.querySelector('.option-validation-message');
+        
+        if (!hasValidOptions && options.length > 0) {
+            validationMessage.style.display = 'block';
+            return false;
+        } else {
+            validationMessage.style.display = 'none';
+            return true;
+        }
+    }
+
+    // ---- EXISTING QUESTION LOGIC ----
+
+    function toggleEditMode(questionItem, showEdit) {
+        const viewMode = questionItem.querySelector('.question-view-mode');
+        const editMode = questionItem.querySelector('.question-edit-mode');
+        
+        if (showEdit) {
+            viewMode.style.display = 'none';
+            editMode.style.display = 'block';
+            const questionType = editMode.querySelector('.edit-question-type').value;
+            if (["multiple_choice", "checkbox", "dropdown"].includes(questionType)) {
+                validateEditOptions(editMode);
+            }
+        } else {
+            viewMode.style.display = 'block';
+            editMode.style.display = 'none';
+        }
+        liveUpdateTotalWordCount();
+    }
+
+    function addOptionToEditForm(optionsList) {
+        const optionDiv = document.createElement('div');
+        optionDiv.className = 'option-input-group';
+        optionDiv.innerHTML = `
+            <input type="text" class="form-input edit-option-text" name="options[]" placeholder="Option text" required>
+            <button type="button" class="btn-icon btn-icon-danger remove-option">
+                <i class="fas fa-trash"></i>
+            </button>
+        `;
+        optionsList.appendChild(optionDiv);
+        optionDiv.querySelector('.remove-option').addEventListener('click', () => {
+            optionDiv.remove();
+            validateEditOptions(optionsList.closest('.question-edit-mode'));
+        });
+        validateEditOptions(optionsList.closest('.question-edit-mode'));
+    }
+
+    function validateEditOptions(editMode) {
+        const optionsContainer = editMode.querySelector('.edit-options-container');
+        const type = editMode.querySelector('.edit-question-type').value;
+
+        if (!optionsContainer) return true;
+        if (!['multiple_choice', 'checkbox', 'dropdown'].includes(type)) {
+            const validationMessage = optionsContainer.querySelector('.option-validation-message');
+            if (validationMessage) validationMessage.style.display = 'none';
+            return true;
+        }
+        
+        const options = optionsContainer.querySelectorAll('.edit-option-text');
+        const hasValidOptions = Array.from(options).some(opt => opt.value.trim() !== '');
+        const validationMessage = optionsContainer.querySelector('.option-validation-message');
+        
+        if (validationMessage) {
+            if (!hasValidOptions && options.length > 0) {
+                validationMessage.style.display = 'block';
+                return false;
+            } else {
+                validationMessage.style.display = 'none';
+                return true;
+            }
+        }
+        return true;
+    }
+
+    // ---- SHARED QUESTION LOGIC ----
+    
+    function toggleQuestionTypeFields(questionElement, selectedType, isNew, index) {
+    const optionsContainer = questionElement.querySelector(isNew ? '.options-container' : '.edit-options-container');
+    const linearScaleContainer = questionElement.querySelector(isNew ? '.linear-scale-fields' : '.edit-linear-scale-fields');
+    
+    // Hide both containers first
+    if(optionsContainer) {
+        optionsContainer.style.display = "none";
+        optionsContainer.classList.remove("show-options");
+    }
+    if(linearScaleContainer) {
+        linearScaleContainer.style.display = "none";
+        linearScaleContainer.classList.remove("show-linear-scale");
+    }
+
+    // Show appropriate container based on type
+    if (["multiple_choice","checkbox","dropdown"].includes(selectedType)) {
+        if(optionsContainer) {
+            optionsContainer.style.display = "block";
+            optionsContainer.classList.add("show-options");
+            const optionsList = optionsContainer.querySelector(isNew ? '.options-list' : '.edit-options-list');
+            if (optionsList.children.length === 0) {
+                if (isNew) addOptionToNewQuestion(questionElement, index);
+                else addOptionToEditForm(optionsList);
+            }
+            if (isNew) validateNewQuestionOptions(questionElement);
+            else validateEditOptions(questionElement.closest('.question-edit-mode') || questionElement);
+        }
+    } else if (selectedType === "linear_scale") {
+        if(linearScaleContainer) {
+            linearScaleContainer.style.display = "block";
+            linearScaleContainer.classList.add("show-linear-scale");
+        }
+    }
+}
+    
+    // ---- EVENT LISTENERS ----
+    
+    if (addQuestionBtn) {
+        addQuestionBtn.addEventListener("click", createQuestionBlock);
+    }
+    
+    if (submitBtn) {
+        document.getElementById("question-form").addEventListener('submit', function(e) {
+            let hasErrors = false;
+            questionsContainer.querySelectorAll('.question-item').forEach(qElement => {
+                if (!validateNewQuestionOptions(qElement)) hasErrors = true;
+            });
+            
+            if (hasErrors) {
+                e.preventDefault();
+                alert("Please fix the validation errors before saving.");
+            }
+        });
+    }
+
+    if (existingQuestionsList) {
+        existingQuestionsList.addEventListener('click', function(e) {
+            const editBtn = e.target.closest('.edit-question-btn');
+            if (editBtn) {
+                toggleEditMode(editBtn.closest('.question-item'), true);
+                return;
+            }
+            
+            const cancelBtn = e.target.closest('.cancel-edit-btn');
+            if (cancelBtn) {
+                toggleEditMode(cancelBtn.closest('.question-item'), false);
+                return;
+            }
+            
+            const addOptBtn = e.target.closest('.add-edit-option');
+            if (addOptBtn) {
+                const optionsList = addOptBtn.closest('.edit-options-container').querySelector('.edit-options-list');
+                addOptionToEditForm(optionsList);
+                return;
+            }
+            
+            const removeOptBtn = e.target.closest('.remove-option');
+            if (removeOptBtn) {
+                const editMode = removeOptBtn.closest('.question-edit-mode');
+                removeOptBtn.closest('.option-input-group').remove();
+                validateEditOptions(editMode);
+                return;
+            }
+        });
+
+        existingQuestionsList.addEventListener('input', function(e) {
+            // Live word count for existing questions
+            if (e.target.classList.contains('edit-question-text')) {
+                const wordCountSpan = e.target.closest('.form-group').querySelector('.edit-question-word-count');
+                if(wordCountSpan) {
+                    wordCountSpan.textContent = countWords(e.target.value);
+                }
+                liveUpdateTotalWordCount();
+            }
+        });
+
+        existingQuestionsList.addEventListener('change', function(e) {
+            if (e.target.classList.contains('edit-question-type')) {
+                toggleQuestionTypeFields(e.target.closest('.question-edit-mode'), e.target.value, false, null);
+            }
+        });
+
+        existingQuestionsList.addEventListener('submit', function(e) {
+            if (e.target.classList.contains('edit-question-form')) {
+                if (!validateEditOptions(e.target.closest('.question-edit-mode'))) {
+                    e.preventDefault();
+                    alert('Please fix the validation errors before saving.');
+                }
+            }
+        });
+    }
+
+    // ---- INITIALIZATION ----
+    liveUpdateTotalWordCount();
+
+});
+</script>
+<script>
+class RichTextEditor {
+    constructor(containerId, textareaId) {
+        this.container = document.getElementById(containerId);
+        this.textarea = document.getElementById(textareaId);
+        this.editor = null;
+        this.toolbar = null;
+        this.linkInputContainer = null;
+        this.linkUrlInput = null;
+        
+        this.init();
+    }
+    
+    init() {
+        this.createEditor();
+        this.setupEventListeners();
+        this.syncToTextarea();
+    }
+    
+    createEditor() {
+        // Create toolbar
+        this.toolbar = document.createElement('div');
+        this.toolbar.className = 'rich-text-toolbar';
+        this.toolbar.innerHTML = `
+            <button type="button" data-command="bold" title="Bold"><strong>B</strong></button>
+            <button type="button" data-command="italic" title="Italic"><em>I</em></button>
+            <button type="button" data-command="underline" title="Underline"><u>U</u></button>
+            <button type="button" data-command="insertUnorderedList" title="Bullet List">•</button>
+            <button type="button" data-command="insertOrderedList" title="Numbered List">1.</button>
+            <button type="button" data-command="createLink" title="Insert Link">🔗</button>
+            <button type="button" data-command="removeFormat" title="Remove Formatting">🗑️</button>
+        `;
+        
+        // Create link input container (hidden by default)
+        this.linkInputContainer = document.createElement('div');
+        this.linkInputContainer.className = 'link-input-container';
+        this.linkInputContainer.style.display = 'none';
+        this.linkInputContainer.innerHTML = `
+            <input type="text" placeholder="Enter URL (https://...)">
+            <button type="button" class="insert-link">Insert</button>
+            <button type="button" class="cancel-link">Cancel</button>
+        `;
+        
+        // Create editor content area
+        this.editor = document.createElement('div');
+        this.editor.className = 'rich-text-content';
+        this.editor.setAttribute('contenteditable', 'true');
+        this.editor.setAttribute('data-placeholder', 'Start typing...');
+        
+        // Set initial content from textarea
+        if (this.textarea.value) {
+            this.editor.innerHTML = this.textarea.value;
+        }
+        
+        // Assemble the editor
+        this.container.innerHTML = '';
+        this.container.appendChild(this.toolbar);
+        this.container.appendChild(this.linkInputContainer);
+        this.container.appendChild(this.editor);
+        
+        // Cache link input elements
+        this.linkUrlInput = this.linkInputContainer.querySelector('input');
+        this.insertLinkBtn = this.linkInputContainer.querySelector('.insert-link');
+        this.cancelLinkBtn = this.linkInputContainer.querySelector('.cancel-link');
+    }
+    
+    setupEventListeners() {
+        // Toolbar buttons
+        this.toolbar.addEventListener('click', (e) => {
+            if (e.target.tagName === 'BUTTON' || e.target.parentElement.tagName === 'BUTTON') {
+                const button = e.target.tagName === 'BUTTON' ? e.target : e.target.parentElement;
+                const command = button.dataset.command;
+                
+                if (command === 'createLink') {
+                    this.showLinkInput();
+                } else {
+                    this.execCommand(command);
+                }
+            }
+        });
+        
+        // Link input events
+        this.insertLinkBtn.addEventListener('click', () => {
+            this.insertLink();
+        });
+        
+        this.cancelLinkBtn.addEventListener('click', () => {
+            this.hideLinkInput();
+        });
+        
+        this.linkUrlInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                this.insertLink();
+            }
+        });
+        
+        // Sync content to textarea
+        this.editor.addEventListener('input', () => {
+            this.syncToTextarea();
+        });
+        
+        this.editor.addEventListener('blur', () => {
+            this.syncToTextarea();
+        });
+    }
+    
+    execCommand(command, value = null) {
+        document.execCommand(command, false, value);
+        this.editor.focus();
+        this.syncToTextarea();
+    }
+    
+    showLinkInput() {
+        this.linkInputContainer.style.display = 'flex';
+        this.linkUrlInput.value = '';
+        this.linkUrlInput.focus();
+    }
+    
+    hideLinkInput() {
+        this.linkInputContainer.style.display = 'none';
+        this.editor.focus();
+    }
+    
+    insertLink() {
+        const url = this.linkUrlInput.value.trim();
+        if (url) {
+            // Add https:// if no protocol specified
+            const fullUrl = url.startsWith('http') ? url : `https://${url}`;
+            this.execCommand('createLink', fullUrl);
+        }
+        this.hideLinkInput();
+    }
+    
+    syncToTextarea() {
+        this.textarea.value = this.editor.innerHTML;
+    }
+    
+    getContent() {
+        return this.editor.innerHTML;
+    }
+    
+    setContent(content) {
+        this.editor.innerHTML = content;
+        this.syncToTextarea();
+    }
+}
+
+// Initialize rich text editors when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize for survey description if exists
+    const descriptionContainer = document.getElementById('description-editor-container');
+    const descriptionTextarea = document.getElementById('description');
+    
+    if (descriptionContainer && descriptionTextarea) {
+        new RichTextEditor('description-editor-container', 'description');
+    }
+    
+    // Initialize for question text areas in survey builder
+    const questionTextareas = document.querySelectorAll('textarea[name="question_text[]"]');
+    questionTextareas.forEach((textarea, index) => {
+        const containerId = `question-editor-${index}`;
+        const container = document.createElement('div');
+        container.id = containerId;
+        container.className = 'rich-text-editor';
+        
+        textarea.parentNode.insertBefore(container, textarea);
+        textarea.style.display = 'none';
+        
+        new RichTextEditor(containerId, textarea.id || `question-text-${index}`);
+    });
+});
+</script>
+{% endblock %}

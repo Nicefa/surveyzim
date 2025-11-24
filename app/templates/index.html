@@ -1,0 +1,698 @@
+{% extends "layout.html" %}
+
+<!-- Set the footer year -->
+{% block year %}{{ current_year }}{% endblock %}
+
+{% block content %}
+<style>
+    /* Page-specific styles for the homepage */
+
+    /* --- Hero Section --- */
+    .hero-section {
+        padding: 4rem 0 6rem 0; /* 64px 0 96px 0 */
+        text-align: center;
+        background-color: var(--brand-bg-light);
+    }
+    
+    .hero-content {
+        max-width: 800px;
+        margin: 0 auto;
+    }
+
+    .hero-title {
+        font-size: 3.75rem; /* 60px */
+        font-weight: 700;
+        margin-bottom: 1rem;
+        color: var(--brand-text-dark);
+        line-height: 1.1;
+        letter-spacing: -0.025em;
+    }
+
+    .hero-title .logo-highlight {
+        color: var(--brand-green-light); /* Using the light green from logo */
+    }
+
+    .hero-tagline {
+        font-size: 1.25rem; /* 20px */
+        color: #4B5563; /* A softer gray */
+        margin-bottom: 2.5rem; /* 40px */
+        line-height: 1.6;
+        max-width: 600px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .hero-actions {
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+        flex-wrap: wrap;
+        margin-bottom: 5rem; /* 80px */
+    }
+    
+    /* --- Hero Stats Section --- */
+    .hero-stats {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 2rem;
+        padding-top: 3rem; /* 48px */
+        margin-top: 4rem; /* 64px */
+        border-top: 1px solid var(--brand-border);
+    }
+
+    .stat {
+        text-align: center;
+        padding: 1.5rem;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        border-radius: 8px;
+    }
+
+    .stat:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    }
+
+    .stat-icon {
+        width: 80px;
+        height: 80px;
+        margin: 0 auto 1.5rem;
+        position: relative;
+        transition: transform 0.3s ease;
+    }
+
+    .stat:hover .stat-icon {
+        transform: scale(1.1);
+    }
+
+    .stat-label {
+        color: var(--brand-text-dark);
+        font-size: 1.25rem;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+    }
+
+    .stat-desc {
+        color: #6B7280;
+        font-size: 0.95rem;
+        line-height: 1.5;
+    }
+
+    /* Modern icon animations */
+    @keyframes float {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-5px); }
+    }
+
+    @keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.8; }
+    }
+
+    @keyframes rotate {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+
+    .icon-float {
+        animation: float 3s ease-in-out infinite;
+    }
+
+    .icon-pulse {
+        animation: pulse 2s ease-in-out infinite;
+    }
+
+    .icon-rotate {
+        animation: rotate 8s linear infinite;
+    }
+
+    /* --- Value Proposition Section --- */
+    .value-section {
+        background: var(--brand-bg-soft); /* Subtle off-white */
+        padding: 6rem 0;
+    }
+
+    .value-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 3rem;
+        text-align: center;
+    }
+    
+    .value-item {
+        opacity: 0;
+        transform: translateY(20px);
+        transition: opacity 0.6s ease, transform 0.6s ease;
+    }
+
+    .value-item.visible {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    .value-item .icon {
+        font-size: 2.5rem;
+        color: var(--brand-green-dark);
+        margin-bottom: 1.5rem;
+        transition: transform 0.3s ease;
+    }
+
+    .value-item:hover .icon {
+        transform: scale(1.1);
+    }
+
+    .value-item h3 {
+        color: var(--brand-text-dark);
+        font-size: 1.5rem; /* 24px */
+        font-weight: 600;
+        margin-bottom: 1rem;
+    }
+
+    .value-item p {
+        color: #4B5563;
+        line-height: 1.6;
+    }
+
+    /* --- Quotes Section --- */
+    .quotes-section {
+        padding: 5rem 0;
+        background: linear-gradient(135deg, var(--brand-bg-light) 0%, var(--brand-bg-soft) 100%);
+        text-align: center;
+    }
+
+    .quotes-container {
+        max-width: 800px;
+        margin: 0 auto;
+        position: relative;
+        min-height: 200px;
+    }
+
+    .quote {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        opacity: 0;
+        transform: translateY(20px);
+        transition: opacity 0.8s ease, transform 0.8s ease;
+        pointer-events: none;
+    }
+
+    .quote.active {
+        opacity: 1;
+        transform: translateY(0);
+        pointer-events: auto;
+    }
+
+    .quote-text {
+        font-size: 1.5rem;
+        line-height: 1.6;
+        color: var(--brand-text-dark);
+        font-style: italic;
+        margin-bottom: 1.5rem;
+        position: relative;
+        padding: 0 2rem;
+    }
+.quote-text:before,
+.quote-text:after {
+    content: "\"";  /* Escaped quotation mark */
+    font-size: 3rem;
+    color: var(--brand-green-light);
+    position: absolute;
+    opacity: 0.3;
+}
+    .quote-text:before {
+        top: -1rem;
+        left: 0;
+    }
+
+    .quote-text:after {
+        bottom: -2rem;
+        right: 0;
+    }
+
+    .quote-author {
+        font-size: 1.1rem;
+        color: var(--brand-green-dark);
+        font-weight: 600;
+    }
+
+    .quote-category {
+        display: inline-block;
+        background: var(--brand-green-light);
+        color: white;
+        padding: 0.3rem 1rem;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        margin-bottom: 1.5rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    .quotes-nav {
+        display: flex;
+        justify-content: center;
+        gap: 0.5rem;
+        margin-top: 2rem;
+    }
+
+    .quote-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: var(--brand-border);
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .quote-dot.active {
+        background: var(--brand-green-dark);
+        transform: scale(1.2);
+    }
+
+    /* --- CTA Section --- */
+    .cta-section {
+        padding: 6rem 0;
+        text-align: center;
+        background: var(--brand-bg-light);
+        opacity: 0;
+        transform: translateY(20px);
+        transition: opacity 0.8s ease, transform 0.8s ease;
+    }
+
+    .cta-section.visible {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    .cta-content h2 {
+        color: var(--brand-text-dark);
+        font-size: 2rem; /* 32px */
+        font-weight: 600;
+        margin-bottom: 2rem;
+        max-width: 500px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+    
+    /* --- Responsive --- */
+    @media (max-width: 768px) {
+        .hero-title {
+            font-size: 2.5rem; /* 40px */
+        }
+        
+        .hero-tagline {
+            font-size: 1.125rem; /* 18px */
+        }
+        
+        .hero-stats {
+            grid-template-columns: 1fr;
+            gap: 2.5rem;
+        }
+        
+        .value-section, .cta-section, .hero-section, .quotes-section {
+            padding: 4rem 0;
+        }
+        
+        .stat-icon {
+            width: 60px;
+            height: 60px;
+        }
+        
+        .quote-text {
+            font-size: 1.25rem;
+            padding: 0 1rem;
+        }
+    }
+</style>
+
+<!-- Hero Section -->
+<section class="hero-section">
+    <div class="container">
+        <div class="hero-content">
+            <h1 class="hero-title">
+                <span>Survey<span class="logo-highlight">Zim</span></span>
+            </h1>
+            <p class="hero-tagline">
+                Create professional, insightful surveys with an easy-to-use platform built for clarity and results.
+            </p>
+            <div class="hero-actions">
+                {% if current_user.is_authenticated %}
+                    <a href="{{ url_for('main.dashboard') }}" class="btn btn-primary">
+                        Go to Dashboard
+                    </a>
+                {% else %}
+                    <a href="{{ url_for('main.register') }}" class="btn btn-primary">
+                        Get Started
+                    </a>
+                    <a href="{{ url_for('main.login') }}" class="btn btn-secondary">
+                        Sign In
+                    </a>
+                {% endif %}
+            </div>
+            
+            <!-- HERO STATS SECTION - Updated with modern dynamic icons -->
+            <div class="hero-stats">
+                <div class="stat">
+                    <div class="stat-icon">
+                        <svg viewBox="0 0 100 100" class="icon-float">
+                            <!-- Speedometer icon with moving needle -->
+                            <circle cx="50" cy="50" r="40" fill="none" stroke="var(--brand-green-dark)" stroke-width="6"/>
+                            <circle cx="50" cy="50" r="35" fill="none" stroke="var(--brand-green-light)" stroke-width="2" opacity="0.7"/>
+                            <!-- Speedometer needle -->
+                            <line x1="50" y1="50" x2="50" y2="20" stroke="var(--brand-green-dark)" stroke-width="4" stroke-linecap="round">
+                                <animateTransform 
+                                    attributeName="transform" 
+                                    attributeType="XML" 
+                                    type="rotate" 
+                                    from="0 50 50" 
+                                    to="80 50 50" 
+                                    dur="2s" 
+                                    repeatCount="indefinite"
+                                    values="0 50 50; 30 50 50; 0 50 50"
+                                    keyTimes="0; 0.5; 1"
+                                />
+                            </line>
+                            <!-- Center dot -->
+                            <circle cx="50" cy="50" r="4" fill="var(--brand-green-dark)"/>
+                        </svg>
+                    </div>
+                    <div class="stat-label">Easy to Use</div>
+                    <div class="stat-desc">Create surveys in minutes, no training needed</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-icon">
+                        <svg viewBox="0 0 100 100" class="icon-pulse">
+                            <!-- Shield icon with pulsing effect -->
+                            <path d="M50,10 L80,20 L80,45 C80,70 65,85 50,90 C35,85 20,70 20,45 L20,20 Z" 
+                                  fill="var(--brand-green-dark)" opacity="0.9"/>
+                            <path d="M50,15 L75,23 L75,45 C75,67 62,80 50,85 C38,80 25,67 25,45 L25,23 Z" 
+                                  fill="var(--brand-bg-light)"/>
+                            <!-- Lock inside shield -->
+                            <rect x="40" y="45" width="20" height="25" rx="3" fill="var(--brand-green-dark)"/>
+                            <circle cx="50" cy="55" r="6" fill="var(--brand-bg-light)"/>
+                            <!-- Animated checkmark -->
+                            <path d="M45,65 L50,70 L60,60" fill="none" stroke="var(--brand-bg-light)" stroke-width="4" stroke-linecap="round">
+                                <animate 
+                                    attributeName="stroke-dasharray"
+                                    values="0,100; 100,100"
+                                    dur="2s"
+                                    repeatCount="indefinite"
+                                />
+                            </path>
+                        </svg>
+                    </div>
+                    <div class="stat-label">Secure & Private</div>
+                    <div class="stat-desc">Your data is protected with enterprise-grade security</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-icon">
+                        <svg viewBox="0 0 100 100" class="icon-rotate">
+                            <!-- Data visualization chart -->
+                            <circle cx="50" cy="50" r="40" fill="none" stroke="var(--brand-green-light)" stroke-width="2" opacity="0.5"/>
+                            <!-- Chart bars with animation -->
+                            <rect x="30" y="40" width="8" height="30" fill="var(--brand-green-dark)" opacity="0.8">
+                                <animate attributeName="height" values="30;10;30" dur="2s" repeatCount="indefinite" />
+                                <animate attributeName="y" values="40;60;40" dur="2s" repeatCount="indefinite" />
+                            </rect>
+                            <rect x="45" y="35" width="8" height="35" fill="var(--brand-green-dark)" opacity="0.8">
+                                <animate attributeName="height" values="35;15;35" dur="2s" repeatCount="indefinite" begin="0.2s" />
+                                <animate attributeName="y" values="35;55;35" dur="2s" repeatCount="indefinite" begin="0.2s" />
+                            </rect>
+                            <rect x="60" y="25" width="8" height="45" fill="var(--brand-green-dark)" opacity="0.8">
+                                <animate attributeName="height" values="45;25;45" dur="2s" repeatCount="indefinite" begin="0.4s" />
+                                <animate attributeName="y" values="25;45;25" dur="2s" repeatCount="indefinite" begin="0.4s" />
+                            </rect>
+                            <!-- Data points -->
+                            <circle cx="34" cy="40" r="2" fill="var(--brand-green-light)">
+                                <animate attributeName="cy" values="40;60;40" dur="2s" repeatCount="indefinite" />
+                            </circle>
+                            <circle cx="49" cy="35" r="2" fill="var(--brand-green-light)">
+                                <animate attributeName="cy" values="35;55;35" dur="2s" repeatCount="indefinite" begin="0.2s" />
+                            </circle>
+                            <circle cx="64" cy="25" r="2" fill="var(--brand-green-light)">
+                                <animate attributeName="cy" values="25;45;25" dur="2s" repeatCount="indefinite" begin="0.4s" />
+                            </circle>
+                        </svg>
+                    </div>
+                    <div class="stat-label">Professional Results</div>
+                    <div class="stat-desc">Get actionable insights with powerful analytics</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Clean Value Proposition -->
+<section class="value-section">
+    <div class="container">
+        <div class="value-grid">
+            <div class="value-item">
+                <div class="icon"><i class="fas fa-drafting-compass"></i></div>
+                <h3>Create</h3>
+                <p>Design beautiful, responsive surveys with our intuitive, easy-to-use builder.</p>
+            </div>
+            <div class="value-item">
+                <div class="icon"><i class="fas fa-paper-plane"></i></div>
+                <h3>Distribute</h3>
+                <p>Share your surveys via link, email, or embed them directly on your website.</p>
+            </div>
+            <div class="value-item">
+                <div class="icon"><i class="fas fa-chart-pie"></i></div>
+                <h3>Analyze</h3>
+                <p>Understand your audience better with organized results and clear response patterns.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Quotes Section -->
+<section class="quotes-section">
+    <div class="container">
+        <div class="quotes-container">
+            <!-- Quote 1 -->
+            <div class="quote active" data-index="0">
+                <div class="quote-category">Building Zimbabwe & National Development</div>
+                <p class="quote-text">Zimbabwe, a land of beauty and possibilities.</p>
+                <p class="quote-author">— Chenjerai Hove</p>
+            </div>
+            
+            <!-- Quote 2 -->
+            <div class="quote" data-index="1">
+                <div class="quote-category">Building Zimbabwe & National Development</div>
+                <p class="quote-text">Zimbabwe, a tapestry woven with the threads of struggle and hope.</p>
+                <p class="quote-author">— Petina Gappah</p>
+            </div>
+            
+            <!-- Quote 3 -->
+            <div class="quote" data-index="2">
+                <div class="quote-category">Building Zimbabwe & National Development</div>
+                <p class="quote-text">For Zimbabwe, liberation was merely the beginning of a new struggle.</p>
+                <p class="quote-author">— Dambudzo Marechera</p>
+            </div>
+            
+            <!-- Quote 4 -->
+            <div class="quote" data-index="3">
+                <div class="quote-category">Building Zimbabwe & National Development</div>
+                <p class="quote-text">Zimbabwe, a nation that dances to the rhythm of its people's resilience.</p>
+                <p class="quote-author">— Yvonne Vera</p>
+            </div>
+            
+            <!-- Quote 5 -->
+            <div class="quote" data-index="4">
+                <div class="quote-category">Building Zimbabwe & National Development</div>
+                <p class="quote-text">Through the hardships, Zimbabwe's spirit shines like the sun on its golden plains.</p>
+                <p class="quote-author">— Brian Chikwava</p>
+            </div>
+            
+            <!-- Quote 6 -->
+            <div class="quote" data-index="5">
+                <div class="quote-category">Love for Zimbabwe & Commitment</div>
+                <p class="quote-text">Give every task your whole heart. Even when you're not present, your work will speak for you, opening doors and earning respect in places you could never have imagined.</p>
+                <p class="quote-author">— Vimbai Takawira</p>
+            </div>
+
+            <!-- Quote 7 -->
+            <div class="quote" data-index="6">
+                <div class="quote-category">Building Zimbabwe & National Development</div>
+                <p class="quote-text">Zimbabwe whispers the tales of its past, echoes of ancient civilisations and colonial struggles.</p>
+                <p class="quote-author">— Charles Mungoshi</p>
+            </div>
+            
+            <!-- Quote 8 -->
+            <div class="quote" data-index="7">
+                <div class="quote-category">Building Zimbabwe & National Development</div>
+                <p class="quote-text">I looked upon Zimbabwe with both pride and sorrow, for it carries the weight of a thousand stories.</p>
+                <p class="quote-author">— NoViolet Bulawayo</p>
+            </div>
+            
+            <!-- Quote 9 -->
+            <div class="quote" data-index="8">
+                <div class="quote-category">Research & Innovation</div>
+                <p class="quote-text">To meet Vision 2030, we must not be mere research and innovation consumers—we must become knowledge producers by funding our own basic and applied research.</p>
+                <p class="quote-author">— National Research and Innovation Foundation</p>
+            </div>
+            
+            <!-- Quote 10 -->
+            <div class="quote" data-index="9">
+                <div class="quote-category">Research & Innovation</div>
+                <p class="quote-text">Knowledge-based economies compete for human capital—the country that provides the best training and working conditions will benefit the most.</p>
+                <p class="quote-author">— National Research and Innovation Foundation</p>
+            </div>
+            
+            <!-- Quote 11 -->
+            <div class="quote" data-index="10">
+                <div class="quote-category">Love for Zimbabwe & Commitment</div>
+                <p class="quote-text">Lord God our saviour and protector, I commit Zimbabwe into your capable hands. With you all things are possible. Free our country and heal our land.</p>
+                <p class="quote-author">— Social Media Prayer, Public Sentiment</p>
+            </div>
+            
+            <!-- Quote 12 -->
+            <div class="quote" data-index="11">
+                <div class="quote-category">Love for Zimbabwe & Commitment</div>
+                <p class="quote-text">In Zimbabwe, I discovered a nation rich in resilience, despite its turbulent history.</p>
+                <p class="quote-author">— Tsitsi Dangarembga</p>
+            </div>
+        </div>
+        <!-- Quote 13 -->
+          <div class="quote" data-index="12">
+                <div class="quote-category">Building Zimbabwe & National Development</div>
+                <p class="quote-text">In Zimbabwe's fields, hope grows alongside the crops, a testament to the indomitable human spirit.</p>
+                <p class="quote-author">— Shimmer Chinodya</p>
+            </div>
+
+        <!-- Navigation Dots -->
+        <div class="quotes-nav">
+            <div class="quote-dot active" data-index="0"></div>
+            <div class="quote-dot" data-index="1"></div>
+            <div class="quote-dot" data-index="2"></div>
+            <div class="quote-dot" data-index="3"></div>
+            <div class="quote-dot" data-index="4"></div>
+            <div class="quote-dot" data-index="5"></div>
+            <div class="quote-dot" data-index="6"></div>
+            <div class="quote-dot" data-index="7"></div>
+            <div class="quote-dot" data-index="8"></div>
+            <div class="quote-dot" data-index="9"></div>
+            <div class="quote-dot" data-index="10"></div>
+            <div class="quote-dot" data-index="11"></div>
+            <div class="quote-dot" data-index="12"></div>
+        </div>
+    </div>
+</section>
+
+<!-- Simple CTA -->
+<section class="cta-section">
+    <div class="container">
+        <div class="cta-content">
+            <h2>Start collecting better data today</h2>
+            {% if current_user.is_authenticated %}
+                <a href="{{ url_for('main.create_survey') }}" class="btn btn-primary">
+                    Create New Survey
+                </a>
+            {% else %}
+                <a href="{{ url_for('main.register') }}" class="btn btn-primary">
+                    Get Started Free
+                </a>
+            {% endif %}
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Animation for transitions
+document.addEventListener('DOMContentLoaded', function() {
+    // Function to check if element is in viewport
+    function isInViewport(element) {
+        const rect = element.getBoundingClientRect();
+        return (
+            rect.top >= 0 &&
+            rect.left >= 0 &&
+            rect.bottom <= (window.innerHeight || document.documentElement.clientHeight) &&
+            rect.right <= (window.innerWidth || document.documentElement.clientWidth)
+        );
+    }
+    
+    // Function to handle scroll animations
+    function handleScrollAnimations() {
+        // Animate value items
+        const valueItems = document.querySelectorAll('.value-item');
+        valueItems.forEach(item => {
+            if (isInViewport(item)) {
+                item.classList.add('visible');
+            }
+        });
+        
+        // Animate CTA section
+        const ctaSection = document.querySelector('.cta-section');
+        if (ctaSection && isInViewport(ctaSection)) {
+            ctaSection.classList.add('visible');
+        }
+    }
+    
+    // Initial check on page load
+    handleScrollAnimations();
+    
+    // Add scroll event listener
+    window.addEventListener('scroll', handleScrollAnimations);
+    
+    // Quotes Carousel Functionality
+    const quotes = document.querySelectorAll('.quote');
+    const dots = document.querySelectorAll('.quote-dot');
+    let currentQuoteIndex = 0;
+    let quoteInterval;
+    
+    function showQuote(index) {
+        // Hide all quotes
+        quotes.forEach(quote => {
+            quote.classList.remove('active');
+        });
+        
+        // Remove active class from all dots
+        dots.forEach(dot => {
+            dot.classList.remove('active');
+        });
+        
+        // Show selected quote and activate corresponding dot
+        quotes[index].classList.add('active');
+        dots[index].classList.add('active');
+        
+        currentQuoteIndex = index;
+    }
+    
+    function nextQuote() {
+        let nextIndex = (currentQuoteIndex + 1) % quotes.length;
+        showQuote(nextIndex);
+    }
+    
+    // Auto-rotate quotes every 6 seconds
+    function startQuoteRotation() {
+        quoteInterval = setInterval(nextQuote, 6000);
+    }
+    
+    // Add click event to dots
+    dots.forEach(dot => {
+        dot.addEventListener('click', function() {
+            const index = parseInt(this.getAttribute('data-index'));
+            showQuote(index);
+            // Reset the auto-rotation timer
+            clearInterval(quoteInterval);
+            startQuoteRotation();
+        });
+    });
+    
+    // Pause rotation on hover
+    const quotesContainer = document.querySelector('.quotes-container');
+    quotesContainer.addEventListener('mouseenter', function() {
+        clearInterval(quoteInterval);
+    });
+    
+    quotesContainer.addEventListener('mouseleave', function() {
+        startQuoteRotation();
+    });
+    
+    // Start the quote rotation
+    startQuoteRotation();
+});
+</script>
+{% endblock %}

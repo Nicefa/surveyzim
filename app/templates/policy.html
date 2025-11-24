@@ -1,0 +1,242 @@
+{% extends "layout.html" %}
+
+<!-- Set the footer year -->
+{% block year %}{{ current_year }}{% endblock %}
+
+{% block content %}
+<style>
+    /* Privacy Policy Page Styles */
+    .privacy-hero {
+        background-color: var(--brand-bg-light);
+        padding: 3rem 0;
+        text-align: center;
+    }
+
+    .privacy-hero h1 {
+        font-size: 2.5rem;
+        color: var(--brand-text-dark);
+        margin-bottom: 1rem;
+    }
+
+    .privacy-hero p {
+        color: #6B7280;
+        font-size: 1.125rem;
+        max-width: 600px;
+        margin: 0 auto;
+    }
+
+    .privacy-content {
+        padding: 4rem 0;
+        max-width: 800px;
+        margin: 0 auto;
+    }
+
+    .privacy-section {
+        margin-bottom: 3rem;
+    }
+
+    .privacy-section h2 {
+        color: var(--brand-text-dark);
+        font-size: 1.5rem;
+        margin-bottom: 1rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 2px solid var(--brand-green-light);
+    }
+
+    .privacy-section h3 {
+        color: var(--brand-text-dark);
+        font-size: 1.25rem;
+        margin: 1.5rem 0 0.5rem 0;
+    }
+
+    .privacy-section p {
+        color: #4B5563;
+        line-height: 1.7;
+        margin-bottom: 1rem;
+    }
+
+    .privacy-section ul {
+        color: #4B5563;
+        line-height: 1.7;
+        margin-left: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .privacy-section li {
+        margin-bottom: 0.5rem;
+    }
+
+    .highlight-box {
+        background-color: var(--brand-bg-soft);
+        border-left: 4px solid var(--brand-green-dark);
+        padding: 1.5rem;
+        margin: 2rem 0;
+        border-radius: 0 8px 8px 0;
+    }
+
+    .highlight-box p {
+        margin-bottom: 0;
+        color: var(--brand-text-dark);
+        font-weight: 500;
+    }
+
+    .contact-info {
+        background-color: var(--brand-bg-light);
+        padding: 2rem;
+        border-radius: 8px;
+        margin-top: 2rem;
+    }
+
+    .contact-info h3 {
+        color: var(--brand-green-dark);
+        margin-top: 0;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .privacy-hero h1 {
+            font-size: 2rem;
+        }
+        
+        .privacy-content {
+            padding: 2rem 1rem;
+        }
+        
+        .privacy-hero {
+            padding: 2rem 1rem;
+        }
+    }
+</style>
+
+<!-- Hero Section -->
+<section class="privacy-hero">
+    <div class="container">
+        <h1>Privacy Policy</h1>
+        <p>How we protect and handle your data at SurveyZim</p>
+    </div>
+</section>
+
+<!-- Privacy Content -->
+<section class="privacy-content">
+    <div class="container">
+        <div class="privacy-section">
+            <h2>Our Commitment to You</h2>
+            <p>At SurveyZim, we believe that privacy is a fundamental right. We're committed to being transparent about how we collect, use, and protect your data especially in the context of research in Zimbabwe. This policy explains our practices in simple, human terms.</p>
+            
+            <div class="highlight-box">
+                <p>SurveyZim is designed with Zimbabwean researchers and participants in mind, and we comply with relevant data protection principles applicable in Zimbabwe.</p>
+            </div>
+        </div>
+
+        <div class="privacy-section">
+            <h2>Information We Collect</h2>
+            <p>We collect information to provide better services to all our users from understanding research needs to improving our platform.</p>
+            
+            <h3>Information you provide to us</h3>
+            <ul>
+                <li><strong>Account Information:</strong> When you create an account, we collect your name, email address, and organizational details if provided.</li>
+                <li><strong>Survey Content:</strong> The surveys you create, including questions, response options, and any media you include.</li>
+                <li><strong>Response Data:</strong> Responses collected through your surveys, which may include personal information about survey participants depending on your survey design.</li>
+                <li><strong>Communication:</strong> Records of your communications with us, including support requests and feedback.</li>
+            </ul>
+            
+            <h3>Information we collect automatically</h3>
+            <ul>
+                <li><strong>Usage Data:</strong> How you interact with our platform pages visited, features used, and time spent.</li>
+                <li><strong>Device Information:</strong> Browser type, operating system, and IP address for security and optimization purposes.</li>
+                <li><strong>Cookies and Similar Technologies:</strong> We use cookies to remember your preferences and improve your experience.</li>
+            </ul>
+        </div>
+
+        <div class="privacy-section">
+            <h2>How We Use Your Information</h2>
+            <p>We use the information we collect for the following purposes:</p>
+            
+            <ul>
+                <li><strong>To provide our services:</strong> Create and manage your surveys, collect responses, and present your data.</li>
+                <li><strong>To improve our platform:</strong> Understand how our features are used to make SurveyZim better for Zimbabwean researchers.</li>
+                <li><strong>To communicate with you:</strong> Send important updates about our services, security alerts, and support messages.</li>
+                <li><strong>To ensure security:</strong> Protect against unauthorized access and maintain the integrity of our platform.</li>
+                <li><strong>For research purposes:</strong> Anonymized and aggregated data may be used to understand broader research trends in Zimbabwe.</li>
+            </ul>
+        </div>
+
+        <div class="privacy-section">
+            <h2>Data Sharing and Disclosure</h2>
+            <p>We respect the sensitivity of research data. We do not sell your personal information or survey responses.</p>
+            
+            <p>We may share your information in these limited circumstances:</p>
+            
+            <ul>
+                <li><strong>With your consent:</strong> We will share personal information with companies, organizations, or individuals outside of SurveyZim when we have your consent to do so.</li>
+                <li><strong>For legal reasons:</strong> We may disclose information if we believe it's reasonably necessary to comply with applicable Zimbabwean laws, regulations, or legal processes.</li>
+                <li><strong>Service providers:</strong> We work with trusted third-party providers who help us operate our platform (such as hosting services). These providers are bound by strict data protection agreements.</li>
+            </ul>
+            
+            <div class="highlight-box">
+                <p>When you use SurveyZim to collect responses, you become a data controller for that information. We encourage you to provide your own privacy notice to survey participants that explains how you will use their data.</p>
+            </div>
+        </div>
+
+        <div class="privacy-section">
+            <h2>Data Security</h2>
+            <p>We implement appropriate technical and organizational measures to protect your data against unauthorized access, alteration, disclosure, or destruction. These include:</p>
+            
+            <ul>
+                <li>Encryption of data in transit using SSL/TLS protocols</li>
+                <li>Secure access controls and authentication systems</li>
+                <li>Regular security assessments and monitoring</li>
+                <li>Staff training on data protection best practices</li>
+            </ul>
+            
+            <p>While we implement robust security measures, no method of transmission over the Internet or electronic storage is 100% secure. We continuously work to strengthen our security practices.</p>
+        </div>
+
+        <div class="privacy-section">
+            <h2>Your Rights and Choices</h2>
+            <p>You have rights regarding your personal information:</p>
+            
+            <ul>
+                <li><strong>Access and Portability:</strong> You can access and download your data through our platform.</li>
+                <li><strong>Correction:</strong> You can update your account information at any time.</li>
+                <li><strong>Deletion:</strong> You can delete your account and associated data, subject to certain legal obligations we may have.</li>
+                <strong>Objection and Restriction:</strong> You can object to or request restriction of certain processing activities.</li>
+            </ul>
+            
+            <p>To exercise these rights, please contact us using the information below.</p>
+        </div>
+
+        <div class="privacy-section">
+            <h2>Data Retention</h2>
+            <p>We retain your information for as long as your account is active or as needed to provide our services. If you delete your account, we will remove your personal information and survey data according to our data retention policy, typically within 30 days.</p>
+            
+            <p>Some data may be retained in backup systems for a limited period for disaster recovery purposes, but it will not be actively processed.</p>
+        </div>
+
+        <div class="privacy-section">
+            <h2>International Data Transfers</h2>
+            <p>SurveyZim primarily stores and processes data within Zimbabwe. In some cases, we may use service providers that store data in other countries, but we ensure appropriate safeguards are in place to protect your information in accordance with this privacy policy.</p>
+        </div>
+
+        <div class="privacy-section">
+            <h2>Changes to This Policy</h2>
+            <p>We may update this privacy policy from time to time. When we do, we will post the updated policy on this page with a revised "last updated" date. For significant changes, we will notify you through the platform or via email.</p>
+            
+            <p><strong>Last updated:</strong> November 2025</p>
+        </div>
+
+        <div class="privacy-section">
+            <h2>Contact Us</h2>
+            <p>If you have questions, concerns, or requests regarding this privacy policy or our data practices, please contact us:</p>
+            
+            <div class="contact-info">
+                <h3>SurveyZim Data Protection</h3>
+                <p>Email: surveyziminfo@gmail.com</p>
+                <p>We aim to respond to all inquiries within 3 business days.</p>
+            </div>
+            
+            <p>If you are a survey participant with questions about how your responses are being used, please contact the researcher who invited you to participate, as they control how your survey responses are used.</p>
+        </div>
+    </div>
+</section>
+{% endblock %}

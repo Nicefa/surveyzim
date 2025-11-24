@@ -1,0 +1,781 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}SurveyZim{% endblock %}</title>
+    <!-- Google Font: Inter (for a professional, modern feel like rwe.com) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='images/favico.ico') }}">
+    
+    <style>
+        :root {
+            /* Color palette derived from your logo and rwe.com inspiration */
+            --brand-green-dark: #3A7A44;  /* From the Zimbabwe map in logo */
+            --brand-green-light: #3A7A44; /* From the "Zim" text in logo */
+            --brand-text-dark: #222222;    /* From the logo background, for text */
+            --brand-text-light: #FAFAFA;   /* Light text for dark backgrounds */
+            --brand-bg-light: #FFFFFF;    /* Main page background */
+            --brand-bg-dark: #222222;     /* Footer background */
+            --brand-bg-soft: #F8F9FA;     /* For section separation */
+            --brand-border: #E5E7EB;      /* Light gray for borders and lines */
+            --brand-danger: #DC2626;      /* Red for errors/deletions */
+            --brand-warning: #F59E0B;     /* Amber for warnings */
+            --brand-info: #3B82F6;        /* Blue for info */
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--brand-bg-light);
+            color: var(--brand-text-dark);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        /* Utility: Main Container */
+        .container {
+            width: 100%;
+            max-width: 1280px; /* Wider, more corporate feel */
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* --- Header --- */
+        /* --- Enhanced Header --- */
+header {
+    background: var(--brand-bg-light);
+    border-bottom: 1px solid var(--brand-border);
+    padding: 1rem 0;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    background-color: rgba(255, 255, 255, 0.95);
+    box-shadow: 0 2px 20px rgba(0, 0, 0, 0.08);
+}
+
+.header-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* Brand Section */
+.brand-section {
+    display: flex;
+    align-items: center;
+}
+
+.brand-link {
+    display: flex;
+    align-items: center;
+    text-decoration: none;
+    color: inherit;
+    gap: 16px;
+    transition: all 0.3s ease;
+    padding: 8px 12px;
+    border-radius: 12px;
+    position: relative;
+    overflow: hidden;
+}
+
+.brand-link::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(58, 122, 68, 0.05), transparent);
+    transition: left 0.6s ease;
+}
+
+.brand-link:hover::before {
+    left: 100%;
+}
+
+.brand-link:hover {
+    transform: translateY(-1px);
+}
+
+/* Logo Mark */
+.logo-mark {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 60px;
+    height: 60px;
+    border-radius: 14px;
+    background: linear-gradient(135deg, var(--brand-green-dark) 0%, #4CAF50 100%);
+    box-shadow: 0 8px 20px rgba(58, 122, 68, 0.2);
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    overflow: hidden;
+}
+
+.logo-mark::after {
+    content: '';
+    position: absolute;
+    inset: 1px;
+    background: white;
+    border-radius: 13px;
+    z-index: 1;
+}
+
+.logo-img {
+    height: 42px;
+    width: auto;
+    position: relative;
+    z-index: 2;
+    filter: brightness(1.1);
+    transition: all 0.3s ease;
+}
+
+.logo-glow {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: radial-gradient(circle at center, rgba(58, 122, 68, 0.1) 0%, transparent 70%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.brand-link:hover .logo-mark {
+    transform: scale(1.05) rotate(2deg);
+    box-shadow: 0 12px 30px rgba(58, 122, 68, 0.3);
+}
+
+.brand-link:hover .logo-glow {
+    opacity: 1;
+}
+
+.brand-link:hover .logo-img {
+    transform: scale(1.08);
+}
+
+/* Brand Identity */
+.brand-identity {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.brand-name {
+    font-size: 1.75rem;
+    font-weight: 800;
+    color: var(--brand-text-dark);
+    line-height: 1;
+    letter-spacing: -0.5px;
+    margin: 0;
+    transition: all 0.3s ease;
+}
+
+.brand-accent {
+    color: var(--brand-green-dark);
+    position: relative;
+}
+
+.brand-accent::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background: linear-gradient(90deg, var(--brand-green-dark), transparent);
+    transform: scaleX(0);
+    transition: transform 0.3s ease;
+}
+
+.brand-link:hover .brand-accent::after {
+    transform: scaleX(1);
+}
+
+.brand-tagline {
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--brand-text-dark);
+    opacity: 0.7;
+    line-height: 1.2;
+    margin: 0;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+}
+
+/* Primary Navigation */
+.primary-nav {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.nav-link {
+    text-decoration: none;
+    color: var(--brand-text-dark);
+    font-weight: 500;
+    font-size: 0.95rem;
+    padding: 0.75rem 1.25rem;
+    border-radius: 10px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    position: relative;
+    overflow: hidden;
+}
+
+.nav-link::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(58, 122, 68, 0.08), transparent);
+    transition: left 0.6s ease;
+}
+
+.nav-link:hover::before {
+    left: 100%;
+}
+
+.nav-link:hover {
+    background-color: var(--brand-bg-soft);
+    color: var(--brand-green-dark);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.nav-button {
+    background: linear-gradient(135deg, var(--brand-green-dark) 0%, #4CAF50 100%);
+    color: var(--brand-text-light);
+    padding: 0.75rem 1.5rem;
+    box-shadow: 0 4px 12px rgba(58, 122, 68, 0.3);
+}
+
+.nav-button:hover {
+    background: linear-gradient(135deg, #2F6036 0%, var(--brand-green-dark) 100%);
+    color: var(--brand-text-light);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(58, 122, 68, 0.4);
+}
+
+        nav {
+            display: flex;
+            gap: 10px; /* Tighter spacing for professional nav */
+        }
+
+        nav a {
+            text-decoration: none;
+            color: var(--brand-text-dark);
+            font-weight: 500;
+            font-size: 0.95rem;
+            padding: 0.5rem 1rem; /* 8px 16px */
+            border-radius: 6px;
+            transition: all 0.2s ease-in-out;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        nav a:hover {
+            background-color: var(--brand-bg-soft);
+            color: var(--brand-green-dark);
+        }
+        
+        nav a.nav-button {
+            background-color: var(--brand-green-dark);
+            color: var(--brand-text-light);
+            padding: 0.5rem 1.25rem;
+        }
+        
+        nav a.nav-button:hover {
+            background-color: var(--brand-green-light);
+            color: var(--brand-text-dark);
+        }
+
+        /* --- Main Content --- */
+        main {
+            flex: 1;
+            padding: 40px 0; /* More vertical spacing */
+        }
+
+        .page-title {
+            font-size: 2.25rem; /* 36px */
+            font-weight: 700;
+            margin-bottom: 2rem; /* 32px */
+            color: var(--brand-text-dark);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        /* --- New Component: Card --- */
+        .card {
+            background: var(--brand-bg-light);
+            border: 1px solid var(--brand-border);
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            padding: 2rem; /* 32px */
+            margin-bottom: 2rem;
+        }
+
+        /* --- New Component: Buttons --- */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            border: 1px solid transparent;
+            border-radius: 6px;
+            padding: 0.75rem 1.5rem; /* 12px 24px */
+            font-size: 1rem; /* 16px */
+            font-weight: 600;
+            text-decoration: none;
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+            outline: none;
+            white-space: nowrap;
+        }
+        
+        .btn:focus-visible {
+            outline: 2px solid var(--brand-info);
+            outline-offset: 2px;
+        }
+
+        .btn-primary {
+            background-color: var(--brand-green-dark);
+            color: var(--brand-text-light);
+            border-color: var(--brand-green-dark);
+        }
+        
+        .btn-primary:hover {
+            background-color: #2F6036; /* A slightly darker shade */
+            border-color: #2F6036;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        .btn-secondary {
+            background-color: var(--brand-bg-soft);
+            color: var(--brand-text-dark);
+            border-color: var(--brand-border);
+        }
+        
+        .btn-secondary:hover {
+            background-color: var(--brand-border);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+        }
+
+        .btn-outline {
+            background-color: var(--brand-bg-light);
+            color: var(--brand-green-dark);
+            border-color: var(--brand-green-dark);
+        }
+        
+        .btn-outline:hover {
+            background-color: var(--brand-green-dark);
+            color: var(--brand-text-light);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(58, 122, 68, 0.15);
+        }
+        
+        .btn-danger {
+            background-color: var(--brand-danger);
+            color: var(--brand-text-light);
+            border-color: var(--brand-danger);
+        }
+        
+        .btn-danger:hover {
+            background-color: #B91C1C;
+        }
+
+        /* --- New Component: Form Elements --- */
+        .form-container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        .form-group {
+            margin-bottom: 1.5rem; /* 24px */
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem; /* 8px */
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+        
+        .form-input,
+        .form-select {
+            background: var(--brand-bg-light);
+            border: 1px solid var(--brand-border);
+            border-radius: 6px;
+            padding: 0.75rem 1rem; /* 12px 16px */
+            font-size: 1rem;
+            color: var(--brand-text-dark);
+            transition: all 0.2s ease;
+            outline: none;
+            width: 100%;
+        }
+        
+        .form-input:focus,
+        .form-select:focus {
+            border-color: var(--brand-green-dark);
+            box-shadow: 0 0 0 3px rgba(58, 122, 68, 0.1);
+        }
+        
+        .form-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 1rem;
+            margin-top: 2rem;
+            padding-top: 2rem;
+            border-top: 1px solid var(--brand-border);
+        }
+
+        /* --- New Component: Table --- */
+        .table-wrapper {
+            width: 100%;
+            overflow-x: auto;
+            border: 1px solid var(--brand-border);
+            border-radius: 8px;
+        }
+        
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .table th,
+        .table td {
+            padding: 1rem 1.5rem; /* 16px 24px */
+            text-align: left;
+            border-bottom: 1px solid var(--brand-border);
+        }
+        
+        .table th {
+            font-weight: 600;
+            color: var(--brand-text-dark);
+            background-color: var(--brand-bg-soft);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        
+        .table tr:last-child td {
+            border-bottom: none;
+        }
+        
+        .table tr:hover {
+            background-color: var(--brand-bg-soft);
+        }
+
+        /* --- Alert Styles --- */
+        .alert {
+            padding: 1rem 1.5rem;
+            border-radius: 6px;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 500;
+            border: 1px solid transparent;
+        }
+        
+        .alert-success {
+            background-color: #F0FDF4;
+            color: #166534;
+            border-color: #A7F3D0;
+        }
+        
+        .alert-error {
+            background-color: #FEF2F2;
+            color: #991B1B;
+            border-color: #FECACA;
+        }
+        
+        .alert-info {
+            background-color: #EFF6FF;
+            color: #1E40AF;
+            border-color: #BFDBFE;
+        }
+        
+        .alert-warning {
+            background-color: #FFFBEB;
+            color: #92400E;
+            border-color: #FDE68A;
+        }
+
+        /* --- Footer --- */
+        footer {
+            background: var(--brand-bg-dark);
+            color: var(--brand-text-light);
+            padding: 3rem 0;
+            margin-top: 50px;
+        }
+        
+        .footer-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            gap: 1rem;
+        }
+        
+        .footer-links {
+            display: flex;
+            gap: 1.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        .footer-links a {
+            color: var(--brand-text-light);
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.2s ease;
+        }
+        
+        .footer-links a:hover {
+            color: var(--brand-green-light);
+        }
+        
+        .footer-socials {
+            display: flex;
+            gap: 1.5rem;
+        }
+        
+        .footer-socials a {
+            color: var(--brand-text-light);
+            font-size: 1.25rem;
+            transition: color 0.2s ease;
+        }
+        
+        .footer-socials a:hover {
+            color: var(--brand-green-light);
+        }
+        
+        .footer-copyright {
+            font-size: 0.9rem;
+            opacity: 0.7;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .header-container {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .brand-link {
+        gap: 12px;
+    }
+    
+    .logo-mark {
+        width: 50px;
+        height: 50px;
+    }
+    
+    .logo-img {
+        height: 36px;
+    }
+    
+    .brand-name {
+        font-size: 1.5rem;
+    }
+    
+    .brand-tagline {
+        font-size: 0.7rem;
+    }
+    
+    .primary-nav {
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 6px;
+        width: 100%;
+    }
+    
+    .nav-link {
+        padding: 0.6rem 1rem;
+        font-size: 0.9rem;
+        flex: 1;
+        min-width: 120px;
+        justify-content: center;
+    }
+}
+
+@media (max-width: 480px) {
+    .brand-link {
+        flex-direction: column;
+        text-align: center;
+        gap: 8px;
+    }
+    
+    .brand-identity {
+        gap: 2px;
+    }
+    
+    .nav-link {
+        min-width: 100px;
+        padding: 0.5rem 0.75rem;
+    }
+            
+            nav {
+                flex-wrap: wrap;
+                justify-content: center;
+                gap: 5px;
+            }
+            
+            nav a {
+                padding: 0.5rem 0.75rem;
+                font-size: 0.9rem;
+            }
+
+            main {
+                padding: 20px 0;
+            }
+            
+            .page-title {
+                font-size: 1.75rem;
+            }
+            
+            .card {
+                padding: 1.5rem;
+            }
+            
+            .footer-container {
+                gap: 1.5rem;
+            }
+            
+            .footer-links {
+                flex-direction: column;
+                gap: 0.5rem;
+                margin-bottom: 0.5rem;
+            }
+        }
+        
+    </style>
+</head>
+<body>
+    <header>
+    <div class="container header-container">
+        <!-- Enhanced Brand Section -->
+        <div class="brand-section">
+            <a href="{{ url_for('main.index') }}" class="brand-link">
+                <div class="logo-mark">
+                    <img src="{{ url_for('static', filename='images/logo.jpg') }}" alt="SurveyZim Logo" class="logo-img">
+                    <div class="logo-glow"></div>
+                </div>
+                <div class="brand-identity">
+                    <h1 class="brand-name">Survey<span class="brand-accent">Zim</span></h1>
+                    <p class="brand-tagline">Professional Survey Solutions</p>
+                </div>
+            </a>
+        </div>
+
+        <!-- Navigation -->
+        <nav class="primary-nav">
+            <a href="{{ url_for('main.index') }}" class="nav-link">
+                <i class="fas fa-home"></i>
+                <span>Home</span>
+            </a>
+            {% if current_user.is_authenticated %}
+                <a href="{{ url_for('main.dashboard') }}" class="nav-link">
+                    <i class="fas fa-tachometer-alt"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="{{ url_for('main.logout') }}" class="nav-link">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Logout</span>
+                </a>
+            {% else %}
+                <a href="{{ url_for('main.login') }}" class="nav-link">
+                    <i class="fas fa-sign-in-alt"></i>
+                    <span>Login</span>
+                </a>
+                <a href="{{ url_for('main.register') }}" class="nav-link nav-button">
+                    <i class="fas fa-user-plus"></i>
+                    <span>Register</span>
+                </a>
+            {% endif %}
+        </nav>
+    </div>
+</header>
+
+    <main>
+        <!-- The container is now applied inside the main block for index.html, 
+             but kept here for other pages that might extend this layout.
+             We will add a specific block for this. -->
+        
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="container">
+                {% for category, message in messages %}
+                    <!-- Map categories to new alert styles -->
+                    {% set alert_class = 'alert-info' %}
+                    {% if category == 'success' %}
+                        {% set alert_class = 'alert-success' %}
+                    {% elif category == 'error' or category == 'danger' %}
+                        {% set alert_class = 'alert-error' %}
+                    {% elif category == 'warning' %}
+                        {% set alert_class = 'alert-warning' %}
+                    {% endif %}
+                    <div class="alert {{ alert_class }}">
+                        <i class="fas fa-info-circle"></i> {{ message }}
+                    </div>
+                {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer>
+        <div class="container footer-container">
+            <div class="footer-links">
+                <a href="{{ url_for('main.about') }}">About Us</a>
+                <a href="{{ url_for('main.features') }}">Features</a>
+                <a href="{{ url_for('main.contact') }}">Contact</a>
+                <a href="{{ url_for('main.policy') }}">Privacy Policy</a>
+            </div>
+            <div class="footer-socials">
+                <a href="#" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
+                <a href="#" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
+                <a href="#" aria-label="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
+            </div>
+            <p class="footer-copyright">&copy; {% block year %}{% endblock %} SurveyZim. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <!-- Removed all the neumorphism-specific JS -->
+    <!-- Add block for page-specific scripts -->
+    <script>
+        // Set current year in footer
+        document.querySelector('footer .footer-copyright').innerHTML = 
+            `&copy; ${new Date().getFullYear()} SurveyZim. All rights reserved.`;
+
+        // Add any global scripts here
+    </script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

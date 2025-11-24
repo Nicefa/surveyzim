@@ -1,0 +1,434 @@
+{% extends "layout.html" %}
+
+<!-- Set the footer year -->
+{% block year %}{{ current_year }}{% endblock %}
+
+{% block content %}
+<style>
+    /* Features Page Styles */
+    .features-hero {
+        background-color: var(--brand-bg-light);
+        padding: 3rem 0;
+        text-align: center;
+        border-bottom: 1px solid var(--brand-border);
+    }
+
+    .features-hero h1 {
+        font-size: 2.5rem;
+        color: var(--brand-text-dark);
+        margin-bottom: 1rem;
+    }
+
+    .features-hero .subtitle {
+        color: #4B5563;
+        font-size: 1.25rem;
+        max-width: 600px;
+        margin: 0 auto;
+        line-height: 1.6;
+    }
+
+    .features-content {
+        padding: 4rem 0;
+    }
+
+    .benefit-section {
+        margin-bottom: 4rem;
+    }
+
+    .benefit-header {
+        text-align: center;
+        margin-bottom: 3rem;
+    }
+
+    .benefit-header h2 {
+        color: var(--brand-text-dark);
+        font-size: 1.75rem;
+        margin-bottom: 1rem;
+    }
+
+    .benefit-header p {
+        color: #4B5563;
+        font-size: 1.125rem;
+        max-width: 700px;
+        margin: 0 auto;
+        line-height: 1.6;
+    }
+
+    .benefit-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 2rem;
+    }
+
+    .benefit-card {
+        background: var(--brand-bg-light);
+        border: 1px solid var(--brand-border);
+        border-radius: 8px;
+        padding: 2rem;
+        transition: all 0.3s ease;
+        position: relative;
+    }
+
+    .benefit-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        border-color: var(--brand-green-light);
+    }
+
+    .benefit-icon {
+        width: 60px;
+        height: 60px;
+        margin-bottom: 1.5rem;
+        color: var(--brand-green-dark);
+    }
+
+    .benefit-card h3 {
+        color: var(--brand-text-dark);
+        font-size: 1.25rem;
+        margin-bottom: 1rem;
+        font-weight: 600;
+    }
+
+    .benefit-card p {
+        color: #4B5563;
+        line-height: 1.6;
+        margin-bottom: 1.5rem;
+    }
+
+    .benefit-features {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .benefit-features li {
+        padding: 0.5rem 0;
+        color: #4B5563;
+        position: relative;
+        padding-left: 1.5rem;
+    }
+
+    .benefit-features li:before {
+        content: "✓";
+        position: absolute;
+        left: 0;
+        color: var(--brand-green-dark);
+        font-weight: bold;
+    }
+
+    .solution-statement {
+        background: var(--brand-bg-soft);
+        padding: 2rem;
+        border-radius: 8px;
+        margin: 2rem 0;
+        border-left: 4px solid var(--brand-green-dark);
+    }
+
+    .solution-statement h3 {
+        color: var(--brand-green-dark);
+        margin-bottom: 1rem;
+    }
+
+    .advantages-section {
+        background: var(--brand-bg-soft);
+        padding: 3rem 0;
+        border-top: 1px solid var(--brand-border);
+        border-bottom: 1px solid var(--brand-border);
+        text-align: center;
+    }
+
+    .advantages-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 2rem;
+        margin-top: 2rem;
+    }
+
+    .advantage-item {
+        padding: 1.5rem;
+    }
+
+    .advantage-item h3 {
+        color: var(--brand-green-dark);
+        margin-bottom: 1rem;
+        font-size: 1.25rem;
+    }
+
+    .advantage-item p {
+        color: #4B5563;
+        line-height: 1.6;
+    }
+
+    .cta-section {
+        text-align: center;
+        padding: 4rem 0;
+    }
+
+    .cta-section h2 {
+        color: var(--brand-text-dark);
+        font-size: 2rem;
+        margin-bottom: 1rem;
+    }
+
+    .cta-section p {
+        color: #4B5563;
+        font-size: 1.125rem;
+        max-width: 600px;
+        margin: 0 auto 2rem;
+        line-height: 1.6;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .features-hero h1 {
+            font-size: 2rem;
+        }
+        
+        .features-content {
+            padding: 2rem 0;
+        }
+        
+        .benefit-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .advantages-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .benefit-card {
+            padding: 1.5rem;
+        }
+    }
+</style>
+
+<!-- Hero Section -->
+<section class="features-hero">
+    <div class="container">
+        <h1>Built for Zimbabwe's Research Challenges</h1>
+        <p class="subtitle">SurveyZim addresses the real obstacles faced by researchers, organizations, and communities across Zimbabwe</p>
+    </div>
+</section>
+
+<!-- Features Content -->
+<section class="features-content">
+    <div class="container">
+        <!-- Benefit 1: Connectivity Challenges -->
+        <div class="benefit-section">
+            <div class="benefit-header">
+                <h2>Conduct Research Despite Connectivity Issues</h2>
+                <p>We understand that consistent internet access can't be assumed in all parts of Zimbabwe</p>
+            </div>
+            
+            <div class="benefit-grid">
+                <div class="benefit-card">
+                    <svg class="benefit-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>
+                    </svg>
+                    <h3>Lightweight Data Collection</h3>
+                    <p>Optimized for efficient data collection even on slower connections</p>
+                    <ul class="benefit-features">
+                        <li>Fast-loading survey forms</li>
+                        <li>Minimal data transfer requirements</li>
+                        <li>Progressive saving of responses</li>
+                        <li>Reliable connection handling</li>
+
+                    </ul>
+                </div>
+                
+                <div class="benefit-card">
+                    <svg class="benefit-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="2" y="6" width="20" height="12" rx="2"></rect>
+                        <path d="M12 12h.01"></path>
+                    </svg>
+                    <h3>Mobile-First Design</h3>
+                    <p>Optimized for the devices Zimbabweans actually use</p>
+                    <ul class="benefit-features">
+                        <li>Fast loading on slower networks</li>
+                        <li>Touch-friendly for smartphone users</li>
+                        <li>Minimal data usage</li>
+                    </ul>
+                </div>
+                
+                <div class="benefit-card">
+                    <svg class="benefit-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                    <h3>Multiple Distribution Channels</h3>
+                    <p>Reach participants through the methods that work best for them</p>
+                    <ul class="benefit-features">
+                        <li>Shareable survey links</li>
+                        <li>QR codes for in-person data collection</li>
+                        <li>Embeddable survey widgets</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Benefit 2: Data Sovereignty -->
+        <div class="benefit-section">
+            <div class="benefit-header">
+                <h2>Keep Zimbabwean Data in Zimbabwe</h2>
+                <p>Your research data should benefit our communities and build local capacity</p>
+            </div>
+            
+            <div class="solution-statement">
+                <h3>The Local Advantage</h3>
+                <p>SurveyZim ensures that Zimbabwean insights remain within our borders, building our national data wealth and protecting participant privacy according to local standards.</p>
+            </div>
+            
+            <div class="benefit-grid">
+                <div class="benefit-card">
+                    <svg class="benefit-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                    </svg>
+                    <h3>Local Data Hosting</h3>
+                    <p>Your survey data is stored on servers within Zimbabwe</p>
+                    <ul class="benefit-features">
+                        <li>Complies with local data regulations</li>
+                        <li>Faster access for local researchers</li>
+                        <li>Supports local tech infrastructure</li>
+                    </ul>
+                </div>
+                
+                <div class="benefit-card">
+                    <svg class="benefit-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                        <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                    </svg>
+                    <h3>Privacy by Design</h3>
+                    <p>Built-in protections that respect participant confidentiality</p>
+                    <ul class="benefit-features">
+                        <li>Anonymous response options</li>
+                        <li>Data encryption at rest and in transit</li>
+                        <li>Granular access controls</li>
+                    </ul>
+                </div>
+                
+                <div class="benefit-card">
+                    <svg class="benefit-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+                        <polyline points="7.5 4.21 12 6.81 16.5 4.21"></polyline>
+                        <polyline points="7.5 19.79 7.5 14.6 3 12"></polyline>
+                        <polyline points="21 12 16.5 14.6 16.5 19.79"></polyline>
+                        <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+                        <line x1="12" y1="22.08" x2="12" y2="12"></line>
+                    </svg>
+                    <h3>National Data Contribution</h3>
+                    <p>Anonymized data helps build Zimbabwe's research capacity</p>
+                    <ul class="benefit-features">
+                        <li>Optional contribution to national datasets</li>
+                        <li>Supports evidence-based policymaking</li>
+                        <li>Builds local research infrastructure</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Benefit 3: Cultural Relevance -->
+        <div class="benefit-section">
+            <div class="benefit-header">
+                <h2>Research Tools That Understand Zimbabwe</h2>
+                <p>Designed with local context, languages, and research practices in mind</p>
+            </div>
+            
+            <div class="benefit-grid">
+                <div class="benefit-card">
+                    <svg class="benefit-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                        <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                    </svg>
+                    <h3>Localized Templates</h3>
+                    <p>Pre-built survey templates for common Zimbabwean research scenarios</p>
+                    <ul class="benefit-features">
+                        <li>Agricultural impact assessments</li>
+                        <li>Community health surveys</li>
+                        <li>Education and literacy studies</li>
+                        <li>Market research for local businesses</li>
+                    </ul>
+                </div>
+                
+                <div class="benefit-card">
+                    <svg class="benefit-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20z"></path>
+                        <path d="M2 12h20"></path>
+                        <path d="M12 2a15.3 15.3 0 0 1 0 20 15.3 15.3 0 0 1 0-20"></path>
+                    </svg>
+                    <h3>Multi-Language Support</h3>
+                    <p>Create surveys in languages your participants actually speak</p>
+                    <ul class="benefit-features">
+                        <li>English, Shona, and Ndebele interfaces</li>
+                        <li>Easy translation of survey content</li>
+                        <li>Cultural appropriateness checks</li>
+                    </ul>
+                </div>
+                
+                <div class="benefit-card">
+                    <svg class="benefit-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="9" cy="7" r="4"></circle>
+                        <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                        <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                    </svg>
+                    <h3>Community-Centered Design</h3>
+                    <p>Tools that work with community structures, not against them</p>
+                    <ul class="benefit-features">
+                        <li>Group response collection</li>
+                        <li>Respect for traditional leadership</li>
+                        <li>Appropriate consent processes</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Advantages Section (Replaces Comparison) -->
+        <div class="advantages-section">
+            <div class="container">
+                <div class="benefit-header">
+                    <h2>Why Choose SurveyZim</h2>
+                    <p>Built specifically to address the unique needs of Zimbabwean researchers</p>
+                </div>
+                
+                <div class="advantages-grid">
+                    <div class="advantage-item">
+                        <h3>Local Expertise</h3>
+                        <p>Our team understands Zimbabwe's research landscape, challenges, and opportunities</p>
+                    </div>
+                    
+                    <div class="advantage-item">
+                        <h3>Cost-Effective</h3>
+                        <p>Priced for Zimbabwean organizations and researchers with local budgets</p>
+                    </div>
+                    
+                    <div class="advantage-item">
+                        <h3>Direct Support</h3>
+                        <p>Get help from our local team who understand your context and challenges</p>
+                    </div>
+                    
+                    <div class="advantage-item">
+                        <h3>Continuous Improvement</h3>
+                        <p>We evolve based on feedback from Zimbabwean researchers and organizations</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- CTA Section -->
+        <div class="cta-section">
+            <div class="container">
+                <h2>Ready to Research the Zimbabwean Way?</h2>
+                <p>Join researchers, organizations, and communities across Zimbabwe who are taking control of their data and building local research capacity</p>
+                {% if current_user.is_authenticated %}
+                    <a href="{{ url_for('main.create_survey') }}" class="btn btn-primary">
+                        Create Your First Survey
+                    </a>
+                {% else %}
+                    <a href="{{ url_for('main.register') }}" class="btn btn-primary">
+                        Start Building Zimbabwe's Data Future
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
